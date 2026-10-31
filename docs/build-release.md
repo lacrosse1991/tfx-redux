@@ -15,9 +15,10 @@ FSIN/FCOS/FPTAN/FPATAN) is selected automatically on Apple Silicon and other
 hosts without an x87 `long double`; production x86-64 packages keep the hardware
 backend. Force the soft path on an x87 host with `-DTFX_FORCE_SOFT_X87=ON` for
 comparison builds. SoftFloat CI covers SoftFloat unit tests plus arcade/simple
-and other fixtures that already agree; a few hardware-recorded bit-exact aero
-fixtures that depend on soft FSIN/FCOS/FPATAN still skip under SoftFloat until
-those transcendentals match x87 ULPs. Both macOS packages require macOS 15 or
+and most aero fixtures (including airdata after a longer soft FPATAN series).
+Hardware-recorded wind and guidance-trajectory fixtures still skip under
+SoftFloat until soft FSIN near k·π and residual acos ULPs match x87. Both macOS
+packages require macOS 15 or
 newer. The Linux package is built on Ubuntu 24.04. No game installation,
 firmware, private research exports or screenshot gallery is needed for these CI
 tests.

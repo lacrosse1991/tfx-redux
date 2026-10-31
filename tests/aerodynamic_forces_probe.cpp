@@ -3,7 +3,6 @@
 #include <iostream>
 #include <vector>
 #include "flight/aerodynamic_forces.h"
-#include "math/calculation.h"
 
 namespace {
 
@@ -15,7 +14,6 @@ double read_double(std::istream &input) {
 } // anonymous namespace
 
 int main(int const argc, char const *const argv[]) try {
-  if constexpr(!tfx::math::calculation_is_hardware_x87) return 77;
   std::ifstream fixture;
   if(argc == 2) fixture.open(argv[1]);
   if(argc > 2 || (argc == 2 && !fixture)) throw std::runtime_error{"cannot open aerodynamic force fixtures"};
