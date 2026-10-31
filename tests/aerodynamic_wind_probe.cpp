@@ -16,7 +16,6 @@ double read_double(std::istream &input) {
 } // anonymous namespace
 
 int main(int const argc, char const *const argv[]) try {
-  if constexpr(!tfx::math::calculation_is_hardware_x87) return 77;
   if(argc == 3 && std::string_view{argv[1]} == "--parameters") {
     for(auto const &p : tfx::flight::load_aerodynamic_wind_parameters(tfx::resources::read_file(argv[2]))) {
       for(auto const value : {p.direction_wobble_scale,p.surface_speed,p.upper_speed,p.upper_direction_degrees,p.legacy_gust_period,p.legacy_gust_range}) std::cout << std::bit_cast<uint64_t>(value) << ' ';
