@@ -1,12 +1,13 @@
 #include "aerodynamic_wind.h"
 #include <bit>
+#include "math/calculation.h"
 #include "math/floating_environment.h"
 #include "math/x87.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = math::calculation;
 double constexpr native_pi{3.14159}, inverse_degrees{.005555555555555555};
 double constexpr inverse_random_max{1.5259021896696422e-05};
 double constexpr wind_smoothing{.05}, renewed_speed_scale{.515};

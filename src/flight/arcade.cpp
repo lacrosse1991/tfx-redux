@@ -1,3 +1,4 @@
+#include "math/calculation.h"
 #include "math/floating_environment.h"
 #include "arcade.h"
 #include "gear_controls.h"
@@ -12,8 +13,9 @@
 
 namespace tfx::flight {
 namespace {
+using std::isfinite;
 
-using calculation = long double;
+using calculation = math::calculation;
 float constexpr sound_speed{340}, speed_metres_per_native_tick{122};
 float constexpr normalised_word{3.0518509447574615e-05f};
 float constexpr throttle_step{0.002f}, idle_throttle{0.6f};
@@ -103,7 +105,7 @@ calculation interpolate(float const low_value, float const low_altitude, float c
   return (static_cast<calculation>(high_value) - low_value) * (static_cast<calculation>(altitude) / (static_cast<calculation>(high_altitude) - low_altitude)) + low_value;
 }
 int32_t integer(calculation const value) {
-  if(value >= 2147483648.0L || value < -2147483648.0L || !std::isfinite(value)) return std::numeric_limits<int32_t>::min();
+  if(value >= 2147483648.0L || value < -2147483648.0L || !isfinite(value)) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 void rotate(arcade_state &state, math::rotation_axis const axis, float const amount) {
@@ -233,7 +235,7 @@ void consume_basic_fuel(arcade_state &state, simulation::timer_ticks const elaps
 void initialise_arcade(arcade_state &state, vec3<int32_t> const &position, vec3<math::angle> const &angles, float const speed, bool const landed, ground_contact const ground) {
   math::floating_environment const environment;
   /// Native mission start centres X/Z on their cells; ground placement uses the aircraft's own gear height
-  if constexpr(std::numeric_limits<calculation>::digits != 64) throw std::runtime_error{"native flight currently requires an x87-precision arithmetic backend"};
+  if constexpr(!math::calculation_is_x87_precision) throw std::runtime_error{"native flight currently requires an x87-precision arithmetic backend"};
   auto const &model{parameters(state.aircraft)};
   state.position = vec3f{vec3<int32_t>{(position.x / world::cell_units) * world::cell_units + world::cell_units / 2,position.y,(position.z / world::cell_units) * world::cell_units + world::cell_units / 2}};
   state.orientation = {};

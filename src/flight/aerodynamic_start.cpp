@@ -1,10 +1,11 @@
 #include "aerodynamic_start.h"
+#include "math/calculation.h"
 #include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = math::calculation;
 double constexpr normalised_word{3.051850947599719e-05}, metres_per_world_unit{2.4384};
 double constexpr gravity{9.81}, suspension_points{3}, metres_per_foot{.3048};
 double constexpr nighthawk_ground_offset{.03600000000000003}, initial_seconds{.01};

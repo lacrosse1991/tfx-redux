@@ -1,11 +1,13 @@
 #include "aerodynamic_autopilot.h"
 #include <cmath>
 #include "flight/aerodynamic_control_law_internal.h"
+#include "math/calculation.h"
 #include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
-using calculation = long double;
+using calculation = math::calculation;
+using std::abs;
 double constexpr gravity{9.81};
 int32_t constexpr minimum_downward_axis{32}, maximum_right_axis{32760};
 void append(aerodynamic_guidance_events &events, afterburner_change const change) {
@@ -28,7 +30,7 @@ aerodynamic_guidance_events update_aerodynamic_autopilot(aerodynamic_autopilot &
   double const weight{static_cast<double>(static_cast<calculation>(data.mass_kg) * 2 * gravity)};
   calculation const available_lift{dynamic * law.surfaces.positive_lift_limit};
   calculation const available_g_lift{static_cast<calculation>(stored_dynamic) * manual.positive_g_lift_limit};
-  if(targets.enabled && down_down > minimum_downward_axis && std::abs(right_down) < maximum_right_axis && (!(available_lift >= weight) || !(available_g_lift >= weight))) {
+  if(targets.enabled && down_down > minimum_downward_axis && abs(right_down) < maximum_right_axis && (!(available_lift >= weight) || !(available_g_lift >= weight))) {
     aerodynamic_speed_state speed{
       .target_metres_per_second{targets.metres_per_second},
       .air_brake_fraction{manual.air_brake_fraction},

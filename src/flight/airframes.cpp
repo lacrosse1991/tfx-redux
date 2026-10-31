@@ -1,3 +1,4 @@
+#include "math/calculation.h"
 #include "math/floating_environment.h"
 #include "airframes.h"
 #include "aerodynamic_airframes.h"
@@ -9,6 +10,7 @@
 
 namespace tfx::flight {
 namespace {
+using std::sqrt;
 
 unsigned int constexpr data_object_file{973476};
 
@@ -46,7 +48,7 @@ double constant(resources::binary_view const &source, unsigned int const field) 
 long double root_argument(resources::binary_view const &source, unsigned int const low, unsigned int const high) {
   if(source.byte(low) != 0x68 || source.byte(high) != 0x68) throw std::runtime_error{"missing aircraft moment argument"};
   auto const argument{std::bit_cast<double>(static_cast<uint64_t>(source.le32(low + 1)) | (static_cast<uint64_t>(source.le32(high + 1)) << 32))};
-  return std::sqrt(static_cast<long double>(argument));
+  return sqrt(static_cast<long double>(argument));
 }
 
 } // anonymous namespace
@@ -100,7 +102,7 @@ struct gear_drag_fields {
   unsigned int area_normalisation;
 };
 double gear_drag(resources::binary_view const &source, gear_drag_fields const &fields) {
-  using calculation = long double;
+  using calculation = math::calculation;
   auto const value{[&](unsigned int const field) { return constant(source,field); }};
   calculation const pi{value(0x579c)};
   calculation const main{pi * value(fields.main_multiplier) * value(fields.main_radius) * value(fields.scale) * value(fields.main_radius) * value(fields.scale)};
@@ -305,7 +307,7 @@ void aerodynamic_airframe::use_carrier_setup() {
 
 aerodynamic_coefficient_parameters aerodynamic_airframe::initial_coefficients(double const previous_flap_lift_offset) const {
   math::floating_environment const environment;
-  using calculation = long double;
+  using calculation = math::calculation;
   auto result{coefficient_base};
   auto const &p{surfaces};
   double constexpr control_multiplier{2.8}, moment_scale{.00001}, damping_scale{-4};
@@ -313,7 +315,7 @@ aerodynamic_coefficient_parameters aerodynamic_airframe::initial_coefficients(do
   calculation const gradient{static_cast<calculation>(result.elevator_moment_gradient) * p.maximum_elevator_angle * control_multiplier / capacity};
   result.pitch_stability_correction = static_cast<double>(gradient - result.pitch_stability_base);
   calculation const combined{static_cast<calculation>(result.pitch_stability_base) + result.pitch_stability_correction};
-  result.pitch_damping_mach_gradient = static_cast<double>(std::sqrt(-combined * stores_and_mounts.stores.moment_b * moment_scale) * damping_scale - result.pitch_damping_base);
+  result.pitch_damping_mach_gradient = static_cast<double>(sqrt(-combined * stores_and_mounts.stores.moment_b * moment_scale) * damping_scale - result.pitch_damping_base);
   return result;
 }
 

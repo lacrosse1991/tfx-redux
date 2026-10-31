@@ -1,3 +1,4 @@
+#include "math/calculation.h"
 #include "math/floating_environment.h"
 #include "simple_controls.h"
 #include <cmath>
@@ -5,7 +6,8 @@
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = math::calculation;
+using std::pow;
 float constexpr native_pi{3.141590118408203f};
 float constexpr radians_per_angle{50.0f / 32768.0f};
 float constexpr seconds_per_tick{.02f}, angles_per_radian{32768};
@@ -52,13 +54,13 @@ direction_keys update_simple_controls(simple_control_state &state, simple_contro
     if(!context.landed || context.metres_per_second > context.stall_metres_per_second) {
       if(!context.pitch_inhibited && keys.up) pitch = approach(pitch,state.positive_pitch_limit,context.elapsed);
       else if(!context.pitch_inhibited && keys.down) pitch = approach(pitch,state.negative_pitch_limit,context.elapsed);
-      else pitch = static_cast<float>(std::pow(static_cast<calculation>(keyboard_retention),static_cast<calculation>(context.elapsed)) * pitch);
+      else pitch = static_cast<float>(pow(static_cast<calculation>(keyboard_retention),static_cast<calculation>(context.elapsed)) * pitch);
     }
     if(!context.alt && (!context.low_speed_ground_contact || context.fixed_speed > rolling_rudder_speed)) {
       state.angular_rate.y = 0;
       if(keys.left) roll = approach(roll,state.roll_limit,context.elapsed);
       else if(keys.right) roll = approach(roll,-state.roll_limit,context.elapsed);
-      else roll = static_cast<float>(std::pow(static_cast<calculation>(keyboard_retention),static_cast<calculation>(context.elapsed)) * roll);
+      else roll = static_cast<float>(pow(static_cast<calculation>(keyboard_retention),static_cast<calculation>(context.elapsed)) * roll);
     }
   }
   if(context.source == control_source::joystick) {
