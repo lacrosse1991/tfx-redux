@@ -34,8 +34,7 @@ concurrency:
 
 jobs:
   changes:
-    # Fork CI uses the repo's self-hosted Linux runners (see k8_apps github_runner).
-    runs-on: self-hosted
+    runs-on: ubuntu-24.04
     outputs:
       release: ${{ steps.classify.outputs.release }}
     steps:
@@ -74,14 +73,12 @@ jobs:
         configuration: [Debug, Release]
         include:
           - platform: linux-x86_64
-            runner: self-hosted
+            runner: ubuntu-24.04
           - platform: windows-x86_64
             runner: windows-2025
           - platform: macos-x86_64
             runner: macos-15-intel
         # Each platform is crossed with both configurations below.
-        # Linux builds on the fork's self-hosted runners; Windows/macOS stay
-        # on GitHub-hosted images (no matching self-hosted pools yet).
         platform: [linux-x86_64, windows-x86_64, macos-x86_64]
     defaults:
       run:
@@ -195,7 +192,7 @@ jobs:
   release:
     needs: [changes, build]
     if: github.ref == 'refs/heads/master' && (needs.changes.outputs.release == 'true' || (github.event_name == 'workflow_dispatch' && inputs.release))
-    runs-on: self-hosted
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     concurrency:
