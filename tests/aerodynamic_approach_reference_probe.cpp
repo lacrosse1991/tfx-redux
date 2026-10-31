@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include "flight/aerodynamic_approach_reference.h"
+#include "math/calculation.h"
 
 namespace {
 double read_double(std::istream &input) {
@@ -11,6 +12,7 @@ double read_double(std::istream &input) {
 } // anonymous namespace
 
 int main(int const argc, char const *const argv[]) try {
+  if constexpr(!tfx::math::calculation_is_hardware_x87) return 77;
   if(argc > 2) throw std::runtime_error{"expected [FILE]"};
   std::ifstream fixture;
   if(argc == 2) fixture.open(argv[1]);

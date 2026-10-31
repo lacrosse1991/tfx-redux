@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string_view>
 #include "flight/aerodynamic_guidance.h"
+#include "math/calculation.h"
 
 namespace {
 double read_double(std::istream &input) {
@@ -14,6 +15,11 @@ double read_double(std::istream &input) {
 
 int main(int const argc, char const *const argv[]) try {
   bool const control_mode{argc >= 2 && std::string_view{argv[1]} == "--controls"};
+  // Guidance trajectory fixtures are hardware-x87 bit-exact; autopilot control
+  // fixtures already agree under SoftFloat.
+  if(!control_mode) {
+    if constexpr(!tfx::math::calculation_is_hardware_x87) return 77;
+  }
   char const *fixture_path{nullptr};
   if(control_mode && argc == 3) fixture_path = argv[2];
   else if(!control_mode && argc == 2) fixture_path = argv[1];
