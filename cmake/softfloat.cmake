@@ -402,3 +402,4 @@ unset(_tfx_softfloat_specialize)
 unset(_tfx_softfloat_platform_dir)
 unset(_tfx_bochs_ext_dir)
 unset(_tfx_bochs_ext_sources)
+# SoftFloat + Bochs extensions are linked via tfx_softfloat.
