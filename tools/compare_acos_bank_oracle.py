@@ -28,8 +28,10 @@ def main() -> int:
     parser.add_argument("softfloat", type=Path)
     parser.add_argument(
         "--fields",
-        default="asin,acos_pi2,acos_atan2,mid_pi2,mid_atan2,mid_pi2_dbl,mid_atan2_dbl",
-        help="Comma-separated fields to compare (default: all numeric dumps)",
+        # Guidance uses pi/2-asin acos and double(acos*bank_margin). asin /
+        # atan2 dumps remain available via --fields for FPATAN chase work.
+        default="acos_pi2,mid_pi2,mid_pi2_dbl",
+        help="Comma-separated fields to compare (default: guidance bank path)",
     )
     args = parser.parse_args()
     fields = [f.strip() for f in args.fields.split(",") if f.strip()]

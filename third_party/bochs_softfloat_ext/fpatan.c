@@ -41,9 +41,9 @@ extern "C" {
 #include "softfloat-specialize.h"
 
 // Post pi/6 reduction |x| can reach ~0.286 (not the |x|<1/4 the series
-// comment assumes). Eleven Taylor terms leave ~7 double ULPs of truncation
-// there; fifteen terms keep the residual well below one double ULP.
-#define FPATAN_ARR_SIZE 15
+// comment assumes). Twenty Taylor terms keep the residual far below one
+// extended ULP on the guidance asin oracle set.
+#define FPATAN_ARR_SIZE 20
 
 static const extFloat80_t floatx80_one = packFloatx80(0, 0x3fff, uint64_t(0x8000000000000000));
 
@@ -77,7 +77,12 @@ static float128_t atan_arr[FPATAN_ARR_SIZE] =
 	PACK_FLOAT_128(0xbffa642c8590b216, 0x42c8590b21642c86), /* 23 */
 	PACK_FLOAT_128(0x3ffa47ae147ae147, 0xae147ae147ae147b), /* 25 */
 	PACK_FLOAT_128(0xbffa2f684bda12f6, 0x84bda12f684bda13), /* 27 */
-	PACK_FLOAT_128(0x3ffa1a7b9611a7b9, 0x611a7b9611a7b961)  /* 29 */
+	PACK_FLOAT_128(0x3ffa1a7b9611a7b9, 0x611a7b9611a7b961), /* 29 */
+	PACK_FLOAT_128(0xbffa084210842108, 0x4210842108421084), /* 31 */
+	PACK_FLOAT_128(0x3ff9f07c1f07c1f0, 0x7c1f07c1f07c1f07), /* 33 */
+	PACK_FLOAT_128(0xbff9d41d41d41d41, 0xd41d41d41d41d41d), /* 35 */
+	PACK_FLOAT_128(0x3ff9bacf914c1bac, 0xf914c1bacf914c1b), /* 37 */
+	PACK_FLOAT_128(0xbff9a41a41a41a41, 0xa41a41a41a41a41a)  /* 39 */
 };
 
 extern float128_t OddPoly(float128_t x, const float128_t *arr, int n);

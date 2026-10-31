@@ -34,8 +34,7 @@ calculation native_asin(calculation const x) { return math::x87::atan2(x,sqrt(1.
 calculation native_acos(calculation const x) {
   // Native 0xd254e subtracts asin from the actual extended half-pi constant.
 #if defined(TFX_SOFT_X87)
-  // Soft extF80 (pi/2 - asin) undershoots x87; float128 difference matches the
-  // recorded double bank after *bank_margin (see softfloat-x87-oracle).
+  // Host long double is not x87-width; use the explicit x87 pi/2 bits.
   return math::x87::acos_pi2_minus_asin(native_asin(x));
 #else
   // Inline pi_v on hardware x87; calculation_pi() changes Debug evaluation.
@@ -95,15 +94,8 @@ aerodynamic_guidance_events update_aerodynamic_guidance(aerodynamic_guidance &st
   calculation const dynamic{wide(data.metres_per_second) * data.atmosphere.density * data.metres_per_second * p.wing_area};
   double const stored_dynamic{static_cast<double>(dynamic)};
   double const weight{static_cast<double>(wide(data.mass_kg) * 2 * gravity)};
-  // SoftFloat's extF80 *bank_margin still diverges from hardware on some
-  // angles even when double(acos)*bank_margin matches; cast the angle first.
-#if defined(TFX_SOFT_X87)
-  state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (dynamic * law.surfaces.positive_lift_limit))) * bank_margin;
-  if(manual.positive_g_lift_limit < law.surfaces.positive_lift_limit) state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (wide(stored_dynamic) * manual.positive_g_lift_limit))) * bank_margin;
-#else
   state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (dynamic * law.surfaces.positive_lift_limit)) * bank_margin);
   if(manual.positive_g_lift_limit < law.surfaces.positive_lift_limit) state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (wide(stored_dynamic) * manual.positive_g_lift_limit)) * bank_margin);
-#endif
   // Original threshold and assigned clamp differ (80 versus 83 degrees).
   if(state.maximum_bank > positive_bank_threshold) state.maximum_bank = positive_clamped_bank;
   else if(state.maximum_bank < negative_bank_threshold) state.maximum_bank = negative_clamped_bank;

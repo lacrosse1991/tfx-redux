@@ -5,6 +5,7 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <numbers>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -66,7 +67,7 @@ calculation acos_pi2_asin(calculation const x) {
 #if defined(TFX_SOFT_X87)
   return tfx::math::x87::acos_pi2_minus_asin(native_asin(x));
 #else
-  return tfx::math::calculation_pi() / 2 - native_asin(x);
+  return calculation{std::numbers::pi_v<long double>} / 2 - native_asin(x);
 #endif
 }
 
@@ -81,8 +82,8 @@ void emit(char const *const label, double const arg_host) {
   calculation const acos_a2{acos_atan2(arg)};
   calculation const mid_pi2{acos_pi2 * bank_margin};
   calculation const mid_a2{acos_a2 * bank_margin};
-  double const mid_pi2_dbl{static_cast<double>(acos_pi2) * bank_margin};
-  double const mid_a2_dbl{static_cast<double>(acos_a2) * bank_margin};
+  double const mid_pi2_dbl{static_cast<double>(acos_pi2 * bank_margin)};
+  double const mid_a2_dbl{static_cast<double>(acos_a2 * bank_margin)};
   std::cout << label
             << " arg=" << dump80(arg)
             << " asin=" << dump80(asin_v)

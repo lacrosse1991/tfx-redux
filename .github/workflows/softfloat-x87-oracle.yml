@@ -1,7 +1,7 @@
 name: SoftFloat x87 acos/bank oracle
 
 # Dual-build SoftFloat vs hardware x87 on Linux Intel and compare extended
-# acos / bank_margin dumps. Expected red until soft FPATAN matches x87.
+# acos / bank_margin dumps for the shared guidance path.
 on:
   workflow_dispatch:
   pull_request:
