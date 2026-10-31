@@ -113,7 +113,8 @@ auto main()->int try {
             << " cos " << close_cos << '/' << samples
             << " tan " << close_tan << '/' << samples
             << " atan2 " << close_atan << '/' << atan_samples << '\n';
-  // Same-process soft-vs-host floors; dual-build CI is softfloat-x87-oracle.yml.
+  // Gate on relative double agreement; Bochs is not claimed bit-exact with Intel.
+  // Double-exact majorities catch larger regressions while still allowing ULP noise.
   require(close_sin == samples, "soft FSIN relative error above 1e-12");
   require(close_cos == samples, "soft FCOS relative error above 1e-12");
   require(close_tan == samples, "soft FPTAN relative error above 1e-12");

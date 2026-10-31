@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string_view>
 #include "flight/aerodynamic_guidance.h"
-#include "math/calculation.h"
 
 namespace {
 double read_double(std::istream &input) {

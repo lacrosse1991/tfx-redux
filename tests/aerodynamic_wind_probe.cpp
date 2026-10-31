@@ -4,7 +4,6 @@
 #include <string_view>
 #include <vector>
 #include "flight/aerodynamic_wind.h"
-#include "math/calculation.h"
 
 namespace {
 
