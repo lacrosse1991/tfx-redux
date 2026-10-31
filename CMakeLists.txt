@@ -656,6 +656,12 @@ if(BUILD_TESTING)
   add_test(NAME math.soft_x87_transcendentals COMMAND soft_x87_transcendental_tests)
   set_tests_properties(math.soft_x87_transcendentals PROPERTIES SKIP_RETURN_CODE 77)
 
+  # Dual-build oracle for SoftFloat vs hardware acos / bank_margin (see
+  # .github/workflows/softfloat-x87-oracle.yml). Not part of default CTest.
+  add_executable(soft_x87_acos_bank_oracle_probe tests/soft_x87_acos_bank_oracle_probe.cpp)
+  target_link_libraries(soft_x87_acos_bank_oracle_probe PRIVATE tfx_core)
+  configure_first_party(soft_x87_acos_bank_oracle_probe)
+
   add_executable(hud_font_probe tests/hud_font_probe.cpp)
   target_link_libraries(hud_font_probe PRIVATE tfx_core)
   configure_first_party(hud_font_probe)
