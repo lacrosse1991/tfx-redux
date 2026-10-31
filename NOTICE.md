@@ -6,7 +6,9 @@ The RA version 2 decompressor is a C++ adaptation of our GPL-3.0-or-later [did-u
 
 The archive lookup/hash and game formats were reconstructed from TFX. Game binaries, archives and extracted resources are not included. The selected gallery in `captures/showcase-4k/` contains screenshots rendered from the original TFX artwork. That artwork remains the property of its respective rights holders and is not covered by this repository’s source-code licence.
 
-Vectorstorm is the bundled Armchair Software shared mathematics component, included without project-specific modifications. Canonical source: https://github.com/Armchair-Software/vectorstorm.
+Vectorstorm is the bundled Armchair Software shared mathematics component,
+included without project-specific modifications under the MIT licence.
+Canonical source: https://github.com/Armchair-Software/vectorstorm.
 
 The pinned DOSBox DBOPL and GF1 hardware cores are copyright the DOSBox Team and licensed
 under GPL-2.0-or-later. Its source and licence headers are retained in the build;
@@ -33,9 +35,10 @@ external research inputs and are not distributed in source or binary packages.
 Berkeley SoftFloat Release 3e (John R. Hauser / The Regents of the University of
 California) supplies the portable 80-bit extended-precision arithmetic used when
 the host has no x87 long double. Its BSD-style licence is retained with the
-fetched sources and Runtime package notices.
+fetched sources and Runtime package notices (`licenses/softfloat`).
 
 FSIN/FCOS/FPTAN/FPATAN for that SoftFloat path come from the Bochs SoftFloat
 transcendental extensions as carried by MAME’s SoftFloat3 port
-(`third_party/bochs_softfloat_ext`), retaining their SoftFloat/Bochs licence
-headers.
+(`third_party/bochs_softfloat_ext`). Their SoftFloat/Bochs licence text is kept
+in each source file and shipped as `licenses/bochs-softfloat` in Runtime
+packages.

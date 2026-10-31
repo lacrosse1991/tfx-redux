@@ -33,13 +33,13 @@ calculation wide(double const value) { return value; }
 calculation native_asin(calculation const x) { return math::x87::atan2(x,sqrt(1.0L - x * x)); }
 calculation native_acos(calculation const x) {
   // Native 0xd254e subtracts asin from the actual extended half-pi constant.
+  // SoftFloat still needs a distinct acos: soft asin is often ~1 ULP high, so
+  // pi/2-asin undershoots hardware, while atan2(sqrt(1-x^2), x) matches the
+  // recorded bank angles. Unifying on pi/2-asin waits on closer soft FPATAN.
 #if defined(TFX_SOFT_X87)
-  // SoftFloat asin tends ~1 ULP high, so pi/2-asin undershoots hardware acos;
-  // atan2(sqrt(1-x^2), x) matches the recorded extended angle.
   return math::x87::atan2(sqrt(1.0L - x * x), x);
 #else
-  // Keep the pi constant inline on hardware x87; wrapping it in
-  // calculation_pi() changes Debug evaluation enough to miss fixtures.
+  // Inline pi_v on hardware x87; calculation_pi() changes Debug evaluation.
   return calculation{std::numbers::pi_v<long double>} / 2 - native_asin(x);
 #endif
 }
@@ -96,9 +96,11 @@ aerodynamic_guidance_events update_aerodynamic_guidance(aerodynamic_guidance &st
   calculation const dynamic{wide(data.metres_per_second) * data.atmosphere.density * data.metres_per_second * p.wing_area};
   double const stored_dynamic{static_cast<double>(dynamic)};
   double const weight{static_cast<double>(wide(data.mass_kg) * 2 * gravity)};
+  // SoftFloat also needs double-width *bank_margin after acos: extF80 mul of
+  // the matching atan2 angle still rounds 1 ULP low on several fixtures. Keep
+  // the hardware product inline — a helper that materializes the lift ratio
+  // changes Debug x87 evaluation enough to miss fixtures.
 #if defined(TFX_SOFT_X87)
-  // SoftFloat's extF80 mul of atan2 acos * bank_margin rounds 1 ULP low on
-  // several fixtures; casting the angle to double first matches the record.
   state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (dynamic * law.surfaces.positive_lift_limit))) * bank_margin;
   if(manual.positive_g_lift_limit < law.surfaces.positive_lift_limit) state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (wide(stored_dynamic) * manual.positive_g_lift_limit))) * bank_margin;
 #else

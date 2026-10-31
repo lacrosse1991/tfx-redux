@@ -42,3 +42,5 @@ if(DEFINED berkeley_softfloat_SOURCE_DIR AND EXISTS "${berkeley_softfloat_SOURCE
   install(FILES "${berkeley_softfloat_SOURCE_DIR}/COPYING.txt"
     DESTINATION licenses/softfloat COMPONENT Runtime)
 endif()
+install(FILES "${PROJECT_SOURCE_DIR}/third_party/bochs_softfloat_ext/LICENSE.txt"
+  DESTINATION licenses/bochs-softfloat COMPONENT Runtime)
