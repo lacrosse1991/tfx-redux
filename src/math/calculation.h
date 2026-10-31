@@ -26,8 +26,8 @@ inline constexpr bool calculation_is_x87_precision =
   std::numeric_limits<calculation>::digits == 64;
 
 // SoftFloat matches x87 width, but some hardware-recorded bit-exact fixtures
-// still diverge (soft FSIN near k·π; residual acos ULP). Gate those probes
-// on the real x87 backend.
+// still diverge on residual soft-trig paths. Gate those probes on the real
+// x87 backend when a SoftFloat workaround is not yet in place.
 inline constexpr bool calculation_is_hardware_x87 =
 #if defined(TFX_SOFT_X87)
   false;

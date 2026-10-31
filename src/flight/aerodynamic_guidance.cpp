@@ -33,7 +33,17 @@ calculation wide(double const value) { return value; }
 calculation native_asin(calculation const x) { return math::x87::atan2(x,sqrt(1.0L - x * x)); }
 calculation native_acos(calculation const x) {
   // Native 0xd254e subtracts asin from the actual extended half-pi constant.
+  // SoftFloat asin tends ~1 ULP high, so pi/2-asin undershoots hardware acos;
+  // atan2(sqrt(1-x^2), x) matches the recorded extended angle.
+  if constexpr(!math::calculation_is_hardware_x87) return math::x87::atan2(sqrt(1.0L - x * x), x);
   return math::calculation_pi() / 2 - native_asin(x);
+}
+double bank_from_acos(calculation const arg) {
+  // Hardware keeps the *bank_margin product in 80-bit before storing double.
+  // SoftFloat's extF80 mul of the matching atan2 acos still rounds 1 ULP low
+  // on several fixtures; casting the angle to double first matches the record.
+  if constexpr(!math::calculation_is_hardware_x87) return static_cast<double>(native_acos(arg)) * bank_margin;
+  return static_cast<double>(native_acos(arg) * bank_margin);
 }
 void wrap_radians(double &value) {
   if(value > native_pi) value = static_cast<double>(wide(value) - wide(native_pi) * 2);
@@ -88,8 +98,8 @@ aerodynamic_guidance_events update_aerodynamic_guidance(aerodynamic_guidance &st
   calculation const dynamic{wide(data.metres_per_second) * data.atmosphere.density * data.metres_per_second * p.wing_area};
   double const stored_dynamic{static_cast<double>(dynamic)};
   double const weight{static_cast<double>(wide(data.mass_kg) * 2 * gravity)};
-  state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (dynamic * law.surfaces.positive_lift_limit)) * bank_margin);
-  if(manual.positive_g_lift_limit < law.surfaces.positive_lift_limit) state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (wide(stored_dynamic) * manual.positive_g_lift_limit)) * bank_margin);
+  state.maximum_bank = bank_from_acos(wide(weight) / (dynamic * law.surfaces.positive_lift_limit));
+  if(manual.positive_g_lift_limit < law.surfaces.positive_lift_limit) state.maximum_bank = bank_from_acos(wide(weight) / (wide(stored_dynamic) * manual.positive_g_lift_limit));
   // Original threshold and assigned clamp differ (80 versus 83 degrees).
   if(state.maximum_bank > positive_bank_threshold) state.maximum_bank = positive_clamped_bank;
   else if(state.maximum_bank < negative_bank_threshold) state.maximum_bank = negative_clamped_bank;
