@@ -34,3 +34,8 @@ Berkeley SoftFloat Release 3e (John R. Hauser / The Regents of the University of
 California) supplies the portable 80-bit extended-precision arithmetic used when
 the host has no x87 long double. Its BSD-style licence is retained with the
 fetched sources and Runtime package notices.
+
+FSIN/FCOS/FPTAN/FPATAN for that SoftFloat path come from the Bochs SoftFloat
+transcendental extensions as carried by MAME’s SoftFloat3 port
+(`third_party/bochs_softfloat_ext`), retaining their SoftFloat/Bochs licence
+headers.

@@ -650,6 +650,12 @@ if(BUILD_TESTING)
   add_test(NAME math.soft_x87_watcom_precision_arithmetic COMMAND soft_x87_arithmetic_tests)
   set_tests_properties(math.soft_x87_watcom_precision_arithmetic PROPERTIES SKIP_RETURN_CODE 77)
 
+  add_executable(soft_x87_transcendental_tests tests/soft_x87_transcendental_test.cpp)
+  target_link_libraries(soft_x87_transcendental_tests PRIVATE tfx_core)
+  configure_first_party(soft_x87_transcendental_tests)
+  add_test(NAME math.soft_x87_transcendentals COMMAND soft_x87_transcendental_tests)
+  set_tests_properties(math.soft_x87_transcendentals PROPERTIES SKIP_RETURN_CODE 77)
+
   add_executable(hud_font_probe tests/hud_font_probe.cpp)
   target_link_libraries(hud_font_probe PRIVATE tfx_core)
   configure_first_party(hud_font_probe)

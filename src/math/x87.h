@@ -4,57 +4,39 @@
 #include <cmath>
 #include "math/calculation.h"
 
+#if defined(TFX_SOFT_X87)
+#include "softfloat3_ext.h"
+#endif
+
 namespace tfx::math::x87 {
 
 #if defined(TFX_SOFT_X87)
 
 // SoftFloat hosts keep Watcom's 53-bit arithmetic via floating_environment.
-// On x86 verification builds, transcendentals still use the host instruction so
-// SoftFloat arithmetic can be compared without inventing a second FSIN model.
-// Non-x86 targets use libm until a soft FPATAN/FSIN/FCOS/FPTAN lands.
+// Transcendentals use the Bochs SoftFloat extensions (full 64-bit significand),
+// matching the portable path needed on Apple Silicon.
 inline calculation atan2(calculation const y, calculation const x) {
-#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__) && (LDBL_MANT_DIG == 64)
-  long double result;
-  long double const host_x{static_cast<long double>(x)};
-  long double const host_y{static_cast<long double>(y)};
-  __asm__("fpatan" : "=t"(result) : "0"(host_x), "u"(host_y) : "st(1)");
-  return calculation{result};
-#else
-  return calculation{std::atan2(static_cast<double>(y), static_cast<double>(x))};
-#endif
+  // Bochs extFloat80_atan(a, b) computes atan(b/a), matching x87 FPATAN
+  // with ST(0)=a (x) and ST(1)=b (y).
+  return calculation{extFloat80_atan(x.bits(), y.bits())};
 }
 
 inline calculation sin(calculation const value) {
-#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__) && (LDBL_MANT_DIG == 64)
-  long double result;
-  long double const host{static_cast<long double>(value)};
-  __asm__("fsin" : "=t"(result) : "0"(host));
-  return calculation{result};
-#else
-  return calculation{std::sin(static_cast<double>(value))};
-#endif
+  extFloat80_t bits{value.bits()};
+  extFloat80_sin(bits);
+  return calculation{bits};
 }
 
 inline calculation cos(calculation const value) {
-#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__) && (LDBL_MANT_DIG == 64)
-  long double result;
-  long double const host{static_cast<long double>(value)};
-  __asm__("fcos" : "=t"(result) : "0"(host));
-  return calculation{result};
-#else
-  return calculation{std::cos(static_cast<double>(value))};
-#endif
+  extFloat80_t bits{value.bits()};
+  extFloat80_cos(bits);
+  return calculation{bits};
 }
 
 inline calculation tan(calculation const value) {
-#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__) && (LDBL_MANT_DIG == 64)
-  long double result;
-  long double const host{static_cast<long double>(value)};
-  __asm__("fptan; fstp %%st(0)" : "=t"(result) : "0"(host));
-  return calculation{result};
-#else
-  return calculation{std::tan(static_cast<double>(value))};
-#endif
+  extFloat80_t bits{value.bits()};
+  extFloat80_tan(bits);
+  return calculation{bits};
 }
 
 #else

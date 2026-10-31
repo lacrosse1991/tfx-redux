@@ -199,8 +199,8 @@ inline float80 trunc(float80 const value) {
   return float80{extF80_roundToInt(value.bits(), softfloat_round_minMag, false)};
 }
 
-// SoftFloat has no transcendental helpers; keep a double-precision stand-in until
-// soft FSIN/FPOW adapters exist. Arithmetic (+-*/sqrt) stays on extFloat80.
+// Soft FSIN/FCOS/FPTAN/FPATAN live in math/x87.h via Bochs SoftFloat extensions.
+// pow has no x87 counterpart in the flight path; keep a double stand-in.
 inline float80 pow(float80 const base, float80 const exponent) {
   return float80{std::pow(static_cast<double>(base), static_cast<double>(exponent))};
 }

@@ -9,9 +9,10 @@ and configuration.
 
 All three packages target x86-64. TFX's faithful flight calculations use x87
 extended precision and instructions on those hosts. A SoftFloat-backed
-80-bit calculation path is under way for Apple Silicon and other hosts without
-an x87 `long double`; production x86-64 packages keep the hardware backend.
-Force it on an x87 host with `-DTFX_FORCE_SOFT_X87=ON` for comparison builds.
+80-bit calculation path (Berkeley SoftFloat arithmetic plus Bochs SoftFloat
+FSIN/FCOS/FPTAN/FPATAN) covers Apple Silicon and other hosts without an x87
+`long double`; production x86-64 packages keep the hardware backend. Force the
+soft path on an x87 host with `-DTFX_FORCE_SOFT_X87=ON` for comparison builds.
 The macOS package is built on Intel, for macOS 15 or newer. The Linux package
 is built on Ubuntu 24.04. No game installation, firmware, private research
 exports or screenshot gallery is needed for these CI tests.

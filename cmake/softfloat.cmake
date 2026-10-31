@@ -18,13 +18,9 @@ set(_tfx_softfloat_specialize 8086-SSE)
 set(_tfx_softfloat_platform_dir "${CMAKE_CURRENT_BINARY_DIR}/softfloat_platform")
 file(MAKE_DIRECTORY "${_tfx_softfloat_platform_dir}")
 file(WRITE "${_tfx_softfloat_platform_dir}/platform.h" [=[
-/* Generated for TFX SoftFloat builds. */
+/* Generated for TFX SoftFloat builds (MAME/Bochs-compatible). */
 #define LITTLEENDIAN 1
-#ifdef __GNUC_STDC_INLINE__
 #define INLINE static inline
-#else
-#define INLINE extern inline
-#endif
 #define SOFTFLOAT_BUILTIN_CLZ 1
 #define SOFTFLOAT_INTRINSIC_INT128 1
 #include "opts-GCC.h"
@@ -355,10 +351,20 @@ set(_tfx_softfloat_sources
   "${berkeley_softfloat_SOURCE_DIR}/source/f128M_lt_quiet.c"
 )
 
-add_library(tfx_softfloat STATIC ${_tfx_softfloat_sources})
+# Bochs SoftFloat transcendental extensions (via MAME's SoftFloat3 port).
+set(_tfx_bochs_ext_dir "${PROJECT_SOURCE_DIR}/third_party/bochs_softfloat_ext")
+set(_tfx_bochs_ext_sources
+  "${_tfx_bochs_ext_dir}/poly.c"
+  "${_tfx_bochs_ext_dir}/fsincos.c"
+  "${_tfx_bochs_ext_dir}/fpatan.c"
+  "${_tfx_bochs_ext_dir}/isNaN.c"
+)
+
+add_library(tfx_softfloat STATIC ${_tfx_softfloat_sources} ${_tfx_bochs_ext_sources})
 target_include_directories(tfx_softfloat PUBLIC
   "${berkeley_softfloat_SOURCE_DIR}/source/include"
   "${_tfx_softfloat_platform_dir}"
+  "${_tfx_bochs_ext_dir}"
 )
 target_include_directories(tfx_softfloat PRIVATE
   "${berkeley_softfloat_SOURCE_DIR}/source/${_tfx_softfloat_specialize}"
@@ -380,10 +386,19 @@ set_target_properties(tfx_softfloat PROPERTIES
   C_EXTENSIONS ON
   POSITION_INDEPENDENT_CODE ON
 )
-# SoftFloat is third-party C; keep its warnings out of first-party Werror builds.
+# SoftFloat core stays C; Bochs extensions are C++ and see SoftFloat via extern "C".
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
-  target_compile_options(tfx_softfloat PRIVATE -w)
+  target_compile_options(tfx_softfloat PRIVATE $<$<COMPILE_LANGUAGE:C>:-w>)
 endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+  target_compile_options(tfx_softfloat PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-w>)
+endif()
+set_source_files_properties(${_tfx_bochs_ext_sources} PROPERTIES LANGUAGE CXX)
+# SoftFloat headers require platform.h (INLINE) before primitives/internals.
+set_source_files_properties(${_tfx_bochs_ext_sources} PROPERTIES
+  COMPILE_OPTIONS "-include;${_tfx_softfloat_platform_dir}/platform.h")
 unset(_tfx_softfloat_sources)
 unset(_tfx_softfloat_specialize)
 unset(_tfx_softfloat_platform_dir)
+unset(_tfx_bochs_ext_dir)
+unset(_tfx_bochs_ext_sources)
