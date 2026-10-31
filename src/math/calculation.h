@@ -5,6 +5,7 @@
 // TFX_SOFT_X87 is forced for verification — it is the SoftFloat float80 wrapper.
 
 #include <limits>
+#include <numbers>
 
 #if defined(TFX_SOFT_X87)
 #include "math/float80.h"
@@ -23,5 +24,18 @@ using calculation = long double;
 
 inline constexpr bool calculation_is_x87_precision =
   std::numeric_limits<calculation>::digits == 64;
+
+// x87 FLDPI / long-double pi_v significand. On SoftFloat hosts, pi_v<long
+// double> is only double-width and must not be used for extended half-pi.
+inline calculation calculation_pi() {
+#if defined(TFX_SOFT_X87)
+  extFloat80_t bits{};
+  bits.signExp = 0x4000;
+  bits.signif = 0xc90fdaa22168c235ull;
+  return calculation{bits};
+#else
+  return std::numbers::pi_v<long double>;
+#endif
+}
 
 } // namespace tfx::math

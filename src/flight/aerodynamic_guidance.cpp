@@ -33,7 +33,7 @@ calculation wide(double const value) { return value; }
 calculation native_asin(calculation const x) { return math::x87::atan2(x,sqrt(1.0L - x * x)); }
 calculation native_acos(calculation const x) {
   // Native 0xd254e subtracts asin from the actual extended half-pi constant.
-  return calculation{std::numbers::pi_v<long double>} / 2 - native_asin(x);
+  return math::calculation_pi() / 2 - native_asin(x);
 }
 void wrap_radians(double &value) {
   if(value > native_pi) value = static_cast<double>(wide(value) - wide(native_pi) * 2);
