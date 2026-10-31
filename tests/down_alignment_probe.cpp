@@ -3,10 +3,8 @@
 #include <iostream>
 #include <stdexcept>
 #include "math/attitude.h"
-#include "math/calculation.h"
 
 int main(int const argc, char const *const argv[]) try {
-  if constexpr(!tfx::math::calculation_is_hardware_x87) return 77;
   if(argc > 2) throw std::runtime_error{"down-axis probe accepts an optional native fixture"};
   std::ifstream fixture;
   if(argc == 2) { fixture.open(argv[1]);if(!fixture) throw std::runtime_error{"cannot open down-axis fixture"}; }
