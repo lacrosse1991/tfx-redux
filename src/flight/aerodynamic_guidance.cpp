@@ -33,11 +33,10 @@ calculation wide(double const value) { return value; }
 calculation native_asin(calculation const x) { return math::x87::atan2(x,sqrt(1.0L - x * x)); }
 calculation native_acos(calculation const x) {
   // Native 0xd254e subtracts asin from the actual extended half-pi constant.
-  // SoftFloat still needs a distinct acos: soft asin is often ~1 ULP high, so
-  // pi/2-asin undershoots hardware, while atan2(sqrt(1-x^2), x) matches the
-  // recorded bank angles. Unifying on pi/2-asin waits on closer soft FPATAN.
 #if defined(TFX_SOFT_X87)
-  return math::x87::atan2(sqrt(1.0L - x * x), x);
+  // Soft extF80 (pi/2 - asin) undershoots x87; float128 difference matches the
+  // recorded double bank after *bank_margin (see softfloat-x87-oracle).
+  return math::x87::acos_pi2_minus_asin(native_asin(x));
 #else
   // Inline pi_v on hardware x87; calculation_pi() changes Debug evaluation.
   return calculation{std::numbers::pi_v<long double>} / 2 - native_asin(x);
@@ -96,10 +95,8 @@ aerodynamic_guidance_events update_aerodynamic_guidance(aerodynamic_guidance &st
   calculation const dynamic{wide(data.metres_per_second) * data.atmosphere.density * data.metres_per_second * p.wing_area};
   double const stored_dynamic{static_cast<double>(dynamic)};
   double const weight{static_cast<double>(wide(data.mass_kg) * 2 * gravity)};
-  // SoftFloat also needs double-width *bank_margin after acos: extF80 mul of
-  // the matching atan2 angle still rounds 1 ULP low on several fixtures. Keep
-  // the hardware product inline — a helper that materializes the lift ratio
-  // changes Debug x87 evaluation enough to miss fixtures.
+  // SoftFloat's extF80 *bank_margin still diverges from hardware on some
+  // angles even when double(acos)*bank_margin matches; cast the angle first.
 #if defined(TFX_SOFT_X87)
   state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (dynamic * law.surfaces.positive_lift_limit))) * bank_margin;
   if(manual.positive_g_lift_limit < law.surfaces.positive_lift_limit) state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (wide(stored_dynamic) * manual.positive_g_lift_limit))) * bank_margin;

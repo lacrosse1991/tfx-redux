@@ -39,6 +39,17 @@ inline calculation tan(calculation const value) {
   return calculation{bits};
 }
 
+// x87-style acos(x) = pi/2 - asin(x). SoftFloat extF80 subtraction of the
+// matching asin undershoots hardware by a systematic 0x800 significand step;
+// evaluate the difference in float128 (Bochs FPATAN's working format) then
+// round back to extended.
+inline calculation acos_pi2_minus_asin(calculation const asin_value) {
+  float128_t pi2{};
+  pi2.v[1] = 0x3fff921fb54442d1ull;
+  pi2.v[0] = 0x8469898cc5170416ull;
+  return calculation{f128_to_extF80(f128_sub(pi2, extF80_to_f128(asin_value.bits())))};
+}
+
 #else
 
 // The current native numerical backend already requires a 64-bit-significand

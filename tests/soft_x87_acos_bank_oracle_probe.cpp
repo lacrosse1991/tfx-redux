@@ -63,7 +63,11 @@ calculation native_asin(calculation const x) {
 }
 
 calculation acos_pi2_asin(calculation const x) {
+#if defined(TFX_SOFT_X87)
+  return tfx::math::x87::acos_pi2_minus_asin(native_asin(x));
+#else
   return tfx::math::calculation_pi() / 2 - native_asin(x);
+#endif
 }
 
 calculation acos_atan2(calculation const x) {
