@@ -45,6 +45,23 @@ extern "C" {
 
 static const extFloat80_t floatx80_one = packFloatx80(0, 0x3fff, uint64_t(0x8000000000000000));
 
+// True π for near-k·π detection. Reduction itself uses Pentium 68-bit π below
+// so residuals track hardware FSIN rather than libm.
+static const float128_t float128_pi =
+	packFloat128(uint64_t(0x4000921fb54442d1), uint64_t(0x8469898CC5170416));
+static const float128_t float128_zero =
+	packFloat128(uint64_t(0x0000000000000000), uint64_t(0x0000000000000000));
+// ~1e-3 as IEEE binary128 (not a binary64 bit pattern in the high word).
+static const float128_t float128_near_pi_threshold =
+	packFloat128(uint64_t(0x3ff50624dd2f1a9f), uint64_t(0xbe76c8b439581062));
+
+static float128_t pentium_pi2()
+{
+	// FLOAT_PI_HI:LO is the 128-bit fraction Bochs/Pentium use for π.
+	float128_t pi = softfloat_normRoundPackToF128(0, 0x4000 - 0x10, FLOAT_PI_HI, FLOAT_PI_LO);
+	return f128_div(pi, i32_to_f128(2));
+}
+
 /* reduce trigonometric function argument using 128-bit precision
    M_PI approximation */
 static uint64_t argument_reduction_kernel(uint64_t aSig0, int Exp, uint64_t *zSig0, uint64_t *zSig1)
@@ -96,6 +113,24 @@ static int reduce_trig_arg(int expDiff, int &zSign, uint64_t &aSig0, uint64_t &a
 	}
 
 	return (int)(q & 3);
+}
+
+// Reduce |a| by float128 π/2 (Pentium 68-bit π). Returns residual in [0, π/4]
+// and the quadrant compatible with sincos_approximation.
+static int reduce_trig_arg_f128(extFloat80_t a, int &zSign, float128_t &r)
+{
+	extFloat80_t abs_a = a;
+	abs_a.signExp &= 0x7fff;
+	float128_t x = extF80_to_f128(abs_a);
+	float128_t half_pi = pentium_pi2();
+	float128_t n_f = f128_roundToInt(f128_div(x, half_pi), softfloat_round_near_even, false);
+	int64_t n = f128_to_i64(n_f, softfloat_round_near_even, false);
+	r = f128_sub(x, f128_mul(n_f, half_pi));
+	if (f128_lt(r, float128_zero)) {
+		r.v[1] ^= uint64_t(0x8000000000000000);
+		zSign = !zSign;
+	}
+	return (int)(n & 3);
 }
 
 #define SIN_ARR_SIZE 11
@@ -299,6 +334,7 @@ int extFloat80_sincos(extFloat80_t a, extFloat80_t *sin_a, extFloat80_t *cos_a)
 
 	softfloat_exceptionFlags |= softfloat_flag_inexact;
 
+	float128_t r;
 	if (expDiff < -1) {    // doesn't require reduction
 		if (expDiff <= -68) {
 			a = packFloatx80(aSign, aExp, aSig0);
@@ -306,17 +342,29 @@ int extFloat80_sincos(extFloat80_t a, extFloat80_t *sin_a, extFloat80_t *cos_a)
 			return 0;
 		}
 		zExp = aExp;
+		r = softfloat_normRoundPackToF128(0, zExp-0x10, aSig0, aSig1);
 	}
 	else {
-		q = reduce_trig_arg(expDiff, zSign, aSig0, aSig1);
+		// Prefer the original 68-bit path (matches hardware for most flight
+		// angles, including wind at 90°). Near k·π the kernel loses hundreds
+		// of double ULPs — refine those with float128 π/2 reduction.
+		extFloat80_t abs_a = a;
+		abs_a.signExp &= 0x7fff;
+		float128_t x = extF80_to_f128(abs_a);
+		float128_t n_pi = f128_roundToInt(f128_div(x, float128_pi), softfloat_round_near_even, false);
+		float128_t dist = f128_sub(x, f128_mul(n_pi, float128_pi));
+		if (f128_lt(dist, float128_zero)) dist.v[1] ^= uint64_t(0x8000000000000000);
+		if (f128_lt(dist, float128_near_pi_threshold)) {
+			q = reduce_trig_arg_f128(a, zSign, r);
+		} else {
+			q = reduce_trig_arg(expDiff, zSign, aSig0, aSig1);
+			r = softfloat_normRoundPackToF128(0, zExp-0x10, aSig0, aSig1);
+		}
 	}
 
 	/* **************************** */
 	/* argument reduction completed */
 	/* **************************** */
-
-	/* using float128 for approximation */
-	float128_t r = softfloat_normRoundPackToF128(0, zExp-0x10, aSig0, aSig1);
 
 	if (aSign) q = -q;
 	if (sin_a) *sin_a = sincos_approximation(zSign, r,   q);
@@ -419,23 +467,33 @@ int extFloat80_tan(extFloat80_t &a)
 
 	softfloat_exceptionFlags |= softfloat_flag_inexact;
 
+	float128_t r;
 	if (expDiff < -1) {    // doesn't require reduction
 		if (expDiff <= -68) {
 			a = packFloatx80(aSign, aExp, aSig0);
 			return 0;
 		}
 		zExp = aExp;
+		r = softfloat_normRoundPackToF128(0, zExp-0x10, aSig0, aSig1);
 	}
 	else {
-		q = reduce_trig_arg(expDiff, zSign, aSig0, aSig1);
+		extFloat80_t abs_a = a;
+		abs_a.signExp &= 0x7fff;
+		float128_t x = extF80_to_f128(abs_a);
+		float128_t n_pi = f128_roundToInt(f128_div(x, float128_pi), softfloat_round_near_even, false);
+		float128_t dist = f128_sub(x, f128_mul(n_pi, float128_pi));
+		if (f128_lt(dist, float128_zero)) dist.v[1] ^= uint64_t(0x8000000000000000);
+		if (f128_lt(dist, float128_near_pi_threshold)) {
+			q = reduce_trig_arg_f128(a, zSign, r);
+		} else {
+			q = reduce_trig_arg(expDiff, zSign, aSig0, aSig1);
+			r = softfloat_normRoundPackToF128(0, zExp-0x10, aSig0, aSig1);
+		}
 	}
 
 	/* **************************** */
 	/* argument reduction completed */
 	/* **************************** */
-
-	/* using float128 for approximation */
-	float128_t r = softfloat_normRoundPackToF128(0, zExp-0x10, aSig0, aSig1);
 
 	float128_t sin_r = poly_sin(r);
 	float128_t cos_r = poly_cos(r);

@@ -29,7 +29,7 @@ double negative(double const value) {
 }
 calculation native_asin(double const value) {
   calculation const x{value};
-  return math::x87::atan2(x,sqrt(1.0L - x * x));
+  return math::x87::atan2(x, sqrt(calculation{1} - x * x));
 }
 void project(aerodynamic_contact_state &state, aerodynamic_motion const &motion, aerodynamic_contact_context const &context, aerodynamic_contact_kind const kind) {
   if(kind == aerodynamic_contact_kind::retracted_wheel) state.offset_body.z = retracted_wheel_down;
@@ -125,7 +125,7 @@ aerodynamic_ground_events update_aerodynamic_realistic_ground(aerodynamic_realis
     }
     if(input.gear_fraction == 0) resistance = static_cast<double>((wide(input.contact.total_mass_kg) * gravity - context.lift) * body_friction);
     if(motion.air_velocity_body.x > 0) resistance = negative(resistance);
-    calculation const inverse_length{1.0L / ground.cable_speed};
+    calculation const inverse_length{calculation{1} / ground.cable_speed};
     point.working_force.x = static_cast<double>((wide(basis.forward.x) * basis.right.y - wide(basis.forward.y) * basis.right.x) * resistance * inverse_length);
     point.working_force.z = static_cast<double>((wide(basis.down.x) * basis.right.y - wide(basis.down.y) * basis.right.x) * resistance * inverse_length);
     point.force.x = static_cast<double>(wide(point.working_force.x) + point.force.x);
