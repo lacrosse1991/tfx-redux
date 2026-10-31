@@ -78,8 +78,13 @@ jobs:
             runner: windows-2025
           - platform: macos-x86_64
             runner: macos-15-intel
+            osx_arch: x86_64
+          - platform: macos-arm64
+            runner: macos-15
+            osx_arch: arm64
         # Each platform is crossed with both configurations below.
-        platform: [linux-x86_64, windows-x86_64, macos-x86_64]
+        # macos-arm64 uses SoftFloat automatically (no hardware x87).
+        platform: [linux-x86_64, windows-x86_64, macos-x86_64, macos-arm64]
     defaults:
       run:
         shell: ${{ matrix.platform == 'windows-x86_64' && 'msys2 {0}' || 'bash' }}
@@ -121,6 +126,8 @@ jobs:
 
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
+        env:
+          OSX_ARCH: ${{ matrix.osx_arch }}
         run: |
           brew install gcc@16 ccache ninja
           gcc_prefix="$(brew --prefix gcc@16)"
@@ -130,7 +137,7 @@ jobs:
           echo "CXX=${gcc_cxx[0]}" >> "$GITHUB_ENV"
           # GLFW's Cocoa integration uses Apple's Objective-C compiler.
           echo "OBJC=$(xcrun --find clang)" >> "$GITHUB_ENV"
-          echo 'ARCHFLAGS=-arch x86_64' >> "$GITHUB_ENV"
+          echo "ARCHFLAGS=-arch $OSX_ARCH" >> "$GITHUB_ENV"
           echo MACOSX_DEPLOYMENT_TARGET=15.0 >> "$GITHUB_ENV"
 
       - name: Restore compiler cache
@@ -143,10 +150,12 @@ jobs:
             ccache-${{ matrix.platform }}-${{ matrix.configuration }}-
 
       - name: Configure
+        env:
+          OSX_ARCH: ${{ matrix.osx_arch }}
         run: |
           extra=()
           if [[ "$RUNNER_OS" == macOS ]]; then
-            extra+=(-DCMAKE_OSX_ARCHITECTURES=x86_64 "-DCMAKE_OBJC_COMPILER=$OBJC")
+            extra+=("-DCMAKE_OSX_ARCHITECTURES=$OSX_ARCH" "-DCMAKE_OBJC_COMPILER=$OBJC")
           fi
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \
             -DBUILD_TESTING=ON -DBUILD_SHARED_LIBS=OFF -DTFX_STATIC_RUNTIME=ON \
@@ -226,12 +235,12 @@ jobs:
           fi
           shopt -s nullglob
           packages=(dist/*.tar.gz dist/*.zip)
-          test "${#packages[@]}" -eq 3
+          test "${#packages[@]}" -eq 4
           (cd dist && sha256sum -- *.tar.gz *.zip > SHA256SUMS)
           if ! gh release view "$tag" >/dev/null 2>&1; then
             gh release create "$tag" --draft --target "$GITHUB_SHA" \
               --title "TFX Redux ${GITHUB_SHA:0:7}" \
-              --notes 'Automated Release builds for Linux x86-64, Windows x86-64 and macOS Intel (x86-64). All six builds passed their asset-independent tests. Original game data and optional synthesiser ROMs are supplied separately. See the repository README for setup.'
+              --notes 'Automated Release builds for Linux x86-64, Windows x86-64, macOS Intel (x86-64) and macOS Apple Silicon (arm64). All eight builds passed their asset-independent tests. Apple Silicon uses the SoftFloat calculation path. Original game data and optional synthesiser ROMs are supplied separately. See the repository README for setup.'
           fi
           gh release upload "$tag" "${packages[@]}" dist/SHA256SUMS --clobber
           gh release edit "$tag" --draft=false --latest

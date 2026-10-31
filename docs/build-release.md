@@ -3,19 +3,20 @@
 The [Build and release workflow](https://github.com/Lost-Engines/tfx-redux/actions/workflows/build.yml)
 follows the Darker projects: Debug and Release builds on Linux, Windows and
 macOS, asset-independent CTest checks, Runtime-only archives, and a generated
-release after all six jobs pass. Builds use C++26, GCC 16 on Linux/macOS, and
+release after all eight jobs pass. Builds use C++26, GCC 16 on Linux/macOS, and
 MSYS2 UCRT64 GCC on Windows. The compiler cache is separate for each platform
 and configuration.
 
-All three packages target x86-64. TFX's faithful flight calculations use x87
-extended precision and instructions on those hosts. A SoftFloat-backed
+Three packages target x86-64 (Linux, Windows, macOS Intel). A fourth package
+targets macOS Apple Silicon (`macos-arm64`). TFX's faithful flight calculations
+use x87 extended precision and instructions on x86-64 hosts. The SoftFloat-backed
 80-bit calculation path (Berkeley SoftFloat arithmetic plus Bochs SoftFloat
-FSIN/FCOS/FPTAN/FPATAN) covers Apple Silicon and other hosts without an x87
-`long double`; production x86-64 packages keep the hardware backend. Force the
-soft path on an x87 host with `-DTFX_FORCE_SOFT_X87=ON` for comparison builds.
-The macOS package is built on Intel, for macOS 15 or newer. The Linux package
-is built on Ubuntu 24.04. No game installation, firmware, private research
-exports or screenshot gallery is needed for these CI tests.
+FSIN/FCOS/FPTAN/FPATAN) is selected automatically on Apple Silicon and other
+hosts without an x87 `long double`; production x86-64 packages keep the hardware
+backend. Force the soft path on an x87 host with `-DTFX_FORCE_SOFT_X87=ON` for
+comparison builds. Both macOS packages require macOS 15 or newer. The Linux
+package is built on Ubuntu 24.04. No game installation, firmware, private
+research exports or screenshot gallery is needed for these CI tests.
 
 ## When a release is published
 
@@ -27,7 +28,7 @@ gallery-only changes do not trigger the game workflow. A manual run has a
 **release** checkbox (off by default); publication is restricted to `master`.
 
 Each release has a `release-<full commit SHA>` tag, a package per platform and
-`SHA256SUMS`. A new release is uploaded as a draft, populated with all three
+`SHA256SUMS`. A new release is uploaded as a draft, populated with all four
 archives and checksums, then published. Existing releases and tags are retained.
 An older build cannot replace a newer release as the latest download.
 
@@ -53,6 +54,7 @@ cmake -DPACKAGE_ROOT="$PWD/build-release/package" \
   -DOUTPUT_DIR="$PWD/build-release/dist" -DPLATFORM=linux-x86_64 -P cmake/package.cmake
 ```
 
-Use `windows-x86_64` or `macos-x86_64` for the corresponding host build.
+Use `windows-x86_64`, `macos-x86_64` or `macos-arm64` for the corresponding
+host build. On Apple Silicon, SoftFloat is selected automatically.
 The CI artifacts include Debug packages and test reports for diagnosis;
 only Release packages are attached to the public release.
