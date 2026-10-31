@@ -36,7 +36,7 @@ void update_aerodynamic_airdata(aerodynamic_airdata &state, aerodynamic_motion &
     state.basis.down[axis] = static_cast<double>(normalised(motion.pose.frame.down[axis]));
   }
   calculation const downward{state.basis.forward.z};
-  state.flight_path_pitch_degrees = static_cast<double>(degrees_per_radian * math::x87::atan2(downward,sqrt(1.0L - downward * downward)));
+  state.flight_path_pitch_degrees = static_cast<double>(degrees_per_radian * math::x87::atan2(downward, sqrt(calculation{1} - downward * downward)));
   unsigned int local_axis{0};
   for(auto const *direction : {&state.basis.forward,&state.basis.right,&state.basis.down}) {
     motion.ground_velocity_body[local_axis] = static_cast<double>(static_cast<calculation>(direction->y) * motion.velocity_ned.y + static_cast<calculation>(direction->x) * motion.velocity_ned.x + static_cast<calculation>(direction->z) * motion.velocity_ned.z);

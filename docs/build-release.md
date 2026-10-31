@@ -18,8 +18,8 @@ comparison builds. SoftFloat CI covers SoftFloat unit tests plus arcade/simple
 and aero fixtures (airdata, wind, forces, guidance trajectory, etc.). The
 [SoftFloat x87 acos/bank oracle](../.github/workflows/softfloat-x87-oracle.yml)
 workflow dual-builds Linux Intel with hardware x87 and `-DTFX_FORCE_SOFT_X87=ON`,
-dumps extended acos/`bank_margin` intermediates, and compares the shared guidance
-bank path (`acos_pi2`, `mid_pi2`, `mid_pi2_dbl`). Both macOS packages
+dumps extended acos/`bank_margin` intermediates (guidance bank path) and
+FSIN/FCOS/FPTAN/FPATAN double-match floors. Both macOS packages
 require macOS 15 or
 newer. The Linux package is built on Ubuntu 24.04. No game installation,
 firmware, private research exports or screenshot gallery is needed for these CI

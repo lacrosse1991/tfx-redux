@@ -662,6 +662,11 @@ if(BUILD_TESTING)
   target_link_libraries(soft_x87_acos_bank_oracle_probe PRIVATE tfx_core)
   configure_first_party(soft_x87_acos_bank_oracle_probe)
 
+  # Dual-build oracle for SoftFloat vs hardware FSIN/FCOS/FPTAN/FPATAN.
+  add_executable(soft_x87_trig_oracle_probe tests/soft_x87_trig_oracle_probe.cpp)
+  target_link_libraries(soft_x87_trig_oracle_probe PRIVATE tfx_core)
+  configure_first_party(soft_x87_trig_oracle_probe)
+
   add_executable(hud_font_probe tests/hud_font_probe.cpp)
   target_link_libraries(hud_font_probe PRIVATE tfx_core)
   configure_first_party(hud_font_probe)

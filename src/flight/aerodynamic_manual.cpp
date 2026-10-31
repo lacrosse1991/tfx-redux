@@ -22,7 +22,9 @@ double constexpr stall_trim_scale{.02}, degrees_per_radian{180.0 / native_pi};
 double constexpr nozzle_angle{native_pi * nozzle_degrees * inverse_degrees};
 uint16_t constexpr external_control_mode{3};
 
-calculation asin(calculation const value) { return math::x87::atan2(value,sqrt(1.0L - value * value)); }
+calculation asin(calculation const value) {
+  return math::x87::atan2(value, sqrt(calculation{1} - value * value));
+}
 calculation velocity_area(aerodynamic_airdata const &data, double const area) {
   calculation const speed{data.metres_per_second};
   return static_cast<calculation>(data.atmosphere.density) * speed * speed * area;

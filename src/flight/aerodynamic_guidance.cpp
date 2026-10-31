@@ -30,14 +30,16 @@ double constexpr positive_roll_step{native_pi * maximum_roll_step_degrees * inve
 double constexpr negative_roll_step{native_pi * -maximum_roll_step_degrees * inverse_degrees};
 
 calculation wide(double const value) { return value; }
-calculation native_asin(calculation const x) { return math::x87::atan2(x,sqrt(1.0L - x * x)); }
+calculation native_asin(calculation const x) {
+  return math::x87::atan2(x, sqrt(calculation{1} - x * x));
+}
 calculation native_acos(calculation const x) {
   // Native 0xd254e subtracts asin from the actual extended half-pi constant.
+  // SoftFloat uses calculation_pi2() (full x87 significand). Hardware keeps
+  // an inline pi_v/2 so Debug codegen matches the recorded fixtures.
 #if defined(TFX_SOFT_X87)
-  // Host long double is not x87-width; use the explicit x87 pi/2 bits.
-  return math::x87::acos_pi2_minus_asin(native_asin(x));
+  return math::calculation_pi2() - native_asin(x);
 #else
-  // Inline pi_v on hardware x87; calculation_pi() changes Debug evaluation.
   return calculation{std::numbers::pi_v<long double>} / 2 - native_asin(x);
 #endif
 }

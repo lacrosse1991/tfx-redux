@@ -65,7 +65,7 @@ calculation native_asin(calculation const x) {
 
 calculation acos_pi2_asin(calculation const x) {
 #if defined(TFX_SOFT_X87)
-  return tfx::math::x87::acos_pi2_minus_asin(native_asin(x));
+  return tfx::math::calculation_pi2() - native_asin(x);
 #else
   return calculation{std::numbers::pi_v<long double>} / 2 - native_asin(x);
 #endif
@@ -78,6 +78,7 @@ calculation acos_atan2(calculation const x) {
 void emit(char const *const label, double const arg_host) {
   calculation const arg{arg_host};
   calculation const asin_v{native_asin(arg)};
+  calculation const asin_sqrt{sqrt(calculation{1} - arg * arg)};
   calculation const acos_pi2{acos_pi2_asin(arg)};
   calculation const acos_a2{acos_atan2(arg)};
   calculation const mid_pi2{acos_pi2 * bank_margin};
@@ -87,6 +88,7 @@ void emit(char const *const label, double const arg_host) {
   std::cout << label
             << " arg=" << dump80(arg)
             << " asin=" << dump80(asin_v)
+            << " asin_sqrt=" << dump80(asin_sqrt)
             << " acos_pi2=" << dump80(acos_pi2)
             << " acos_atan2=" << dump80(acos_a2)
             << " mid_pi2=" << dump80(mid_pi2)

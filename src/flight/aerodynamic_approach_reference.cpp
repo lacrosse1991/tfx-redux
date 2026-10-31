@@ -31,7 +31,7 @@ void update_aerodynamic_approach_reference(aerodynamic_approach_reference &state
   state.ground_speed = static_cast<double>(sqrt(static_cast<calculation>(velocity.y) * velocity.y + static_cast<calculation>(velocity.x) * velocity.x + static_cast<calculation>(velocity.z) * velocity.z));
   if(state.ground_speed > minimum_path_speed && velocity.z < state.ground_speed && velocity.z > -state.ground_speed) {
     calculation const ratio{static_cast<calculation>(velocity.z) / state.ground_speed};
-    state.flight_path_degrees = static_cast<double>(math::x87::atan2(ratio,sqrt(1.0L - ratio * ratio)) * degrees_per_half_turn / native_pi);
+    state.flight_path_degrees = static_cast<double>(math::x87::atan2(ratio, sqrt(calculation{1} - ratio * ratio)) * degrees_per_half_turn / native_pi);
   }
 }
 

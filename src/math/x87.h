@@ -39,15 +39,6 @@ inline calculation tan(calculation const value) {
   return calculation{bits};
 }
 
-// x87-style acos(x) = pi/2 - asin(x). Host long double is binary64 on
-// Apple Silicon, so load the classic x87 pi/2 significand explicitly.
-inline calculation acos_pi2_minus_asin(calculation const asin_value) {
-  extFloat80_t pi2{};
-  pi2.signExp = 0x3fff;
-  pi2.signif = 0xc90fdaa22168c235ull;
-  return calculation{pi2} - asin_value;
-}
-
 #else
 
 // The current native numerical backend already requires a 64-bit-significand

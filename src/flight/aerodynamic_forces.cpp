@@ -15,7 +15,7 @@ double constexpr refuelling_level_moment{10000};
 calculation native_asin(double const value) {
   // Detected 387 path: original 0xd242c then 0xd24a7's direct FPATAN.
   calculation const x{value};
-  return math::x87::atan2(x,sqrt(1.0L - x * x));
+  return math::x87::atan2(x, sqrt(calculation{1} - x * x));
 }
 
 } // anonymous namespace

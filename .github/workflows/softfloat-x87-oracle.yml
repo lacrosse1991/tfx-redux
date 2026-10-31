@@ -1,25 +1,32 @@
 name: SoftFloat x87 acos/bank oracle
 
 # Dual-build SoftFloat vs hardware x87 on Linux Intel and compare extended
-# acos / bank_margin dumps for the shared guidance path.
+# acos / bank_margin dumps for the shared guidance path, plus FSIN/FCOS/FPTAN/
+# FPATAN double-match floors.
 on:
   workflow_dispatch:
   pull_request:
     paths:
       - 'src/math/**'
+      - 'src/flight/aerodynamic_guidance.cpp'
       - 'third_party/bochs_softfloat_ext/**'
       - 'cmake/softfloat.cmake'
       - 'tests/soft_x87_acos_bank_oracle_probe.cpp'
+      - 'tests/soft_x87_trig_oracle_probe.cpp'
       - 'tools/compare_acos_bank_oracle.py'
+      - 'tools/compare_trig_oracle.py'
       - '.github/workflows/softfloat-x87-oracle.yml'
   push:
     branches: [master]
     paths:
       - 'src/math/**'
+      - 'src/flight/aerodynamic_guidance.cpp'
       - 'third_party/bochs_softfloat_ext/**'
       - 'cmake/softfloat.cmake'
       - 'tests/soft_x87_acos_bank_oracle_probe.cpp'
+      - 'tests/soft_x87_trig_oracle_probe.cpp'
       - 'tools/compare_acos_bank_oracle.py'
+      - 'tools/compare_trig_oracle.py'
       - '.github/workflows/softfloat-x87-oracle.yml'
 
 permissions:
@@ -70,11 +77,14 @@ jobs:
             -DCMAKE_DISABLE_FIND_PACKAGE_glfw3=ON \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
-      - name: Build hardware oracle probe
-        run: cmake --build build-hw --target soft_x87_acos_bank_oracle_probe
+      - name: Build hardware oracle probes
+        run: |
+          cmake --build build-hw --target soft_x87_acos_bank_oracle_probe soft_x87_trig_oracle_probe
 
-      - name: Run hardware oracle
-        run: ./build-hw/soft_x87_acos_bank_oracle_probe | tee hardware.oracle
+      - name: Run hardware oracles
+        run: |
+          ./build-hw/soft_x87_acos_bank_oracle_probe | tee hardware.oracle
+          ./build-hw/soft_x87_trig_oracle_probe | tee hardware-trig.oracle
 
       - name: Configure SoftFloat on x87 host
         run: |
@@ -84,21 +94,35 @@ jobs:
             -DCMAKE_DISABLE_FIND_PACKAGE_glfw3=ON \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
-      - name: Build SoftFloat oracle probe
-        run: cmake --build build-soft --target soft_x87_acos_bank_oracle_probe
+      - name: Build SoftFloat oracle probes
+        run: |
+          cmake --build build-soft --target soft_x87_acos_bank_oracle_probe soft_x87_trig_oracle_probe
 
-      - name: Run SoftFloat oracle
-        run: ./build-soft/soft_x87_acos_bank_oracle_probe | tee softfloat.oracle
+      - name: Run SoftFloat oracles
+        run: |
+          ./build-soft/soft_x87_acos_bank_oracle_probe | tee softfloat.oracle
+          ./build-soft/soft_x87_trig_oracle_probe | tee softfloat-trig.oracle
 
       - name: Compare extended acos/bank dumps
         run: python3 tools/compare_acos_bank_oracle.py hardware.oracle softfloat.oracle
+
+      - name: Report asin / asin_sqrt diagnostics
+        if: always()
+        run: |
+          python3 tools/compare_acos_bank_oracle.py hardware.oracle softfloat.oracle \
+            --fields asin,asin_sqrt || true
+
+      - name: Compare trig dumps
+        run: python3 tools/compare_trig_oracle.py hardware-trig.oracle softfloat-trig.oracle
 
       - name: Upload oracle dumps
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: softfloat-x87-acos-bank-oracle
+          name: softfloat-x87-oracles
           path: |
             hardware.oracle
             softfloat.oracle
+            hardware-trig.oracle
+            softfloat-trig.oracle
           if-no-files-found: ignore

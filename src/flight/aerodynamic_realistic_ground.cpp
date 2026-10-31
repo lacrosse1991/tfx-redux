@@ -29,7 +29,7 @@ double negative(double const value) {
 }
 calculation native_asin(double const value) {
   calculation const x{value};
-  return math::x87::atan2(x,sqrt(1.0L - x * x));
+  return math::x87::atan2(x, sqrt(calculation{1} - x * x));
 }
 void project(aerodynamic_contact_state &state, aerodynamic_motion const &motion, aerodynamic_contact_context const &context, aerodynamic_contact_kind const kind) {
   if(kind == aerodynamic_contact_kind::retracted_wheel) state.offset_body.z = retracted_wheel_down;
