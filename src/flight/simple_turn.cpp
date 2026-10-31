@@ -1,3 +1,4 @@
+#include "math/calculation.h"
 #include "math/floating_environment.h"
 #include "simple_turn.h"
 #include <algorithm>
@@ -7,8 +8,10 @@
 
 namespace tfx::flight {
 namespace {
+using std::isfinite;
 
-using calculation = long double;
+using calculation = math::calculation;
+using std::abs;
 float constexpr native_pi{3.141590118408203f};
 float constexpr normalised_word{3.0518509447574615e-05f};
 float constexpr mach_response{250}, response_fraction{1.6666666269302368f};
@@ -25,7 +28,7 @@ calculation normalised(int32_t const component) {
   return static_cast<calculation>(math::signed_word(static_cast<uint16_t>(component))) * normalised_word;
 }
 int32_t truncate(calculation const value) {
-  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+  if(!isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 void rotate_heading(simple_turn_state &state, float const amount) {
@@ -48,8 +51,8 @@ void update_simple_turn(simple_turn_state &state, simple_turn_context const &con
   auto const weighted{truncate(static_cast<calculation>(math::signed_word(state.orientation.angles().z)) * bank_weight)};
   int32_t const bank{math::signed_word(static_cast<uint16_t>(weighted))};
   state.bank_correction = static_cast<int16_t>(state.bank_correction * 3 / 4);
-  if(bank < -bank_sector_begin && bank > -bank_sector_end) state.bank_correction = static_cast<int16_t>(std::abs((bank + bank_sector_midpoint) / 2) - bank_correction_peak);
-  else if(bank > bank_sector_begin && bank < bank_sector_end) state.bank_correction = static_cast<int16_t>(bank_correction_peak - std::abs((bank - bank_sector_midpoint) / 2));
+  if(bank < -bank_sector_begin && bank > -bank_sector_end) state.bank_correction = static_cast<int16_t>(abs((bank + bank_sector_midpoint) / 2) - bank_correction_peak);
+  else if(bank > bank_sector_begin && bank < bank_sector_end) state.bank_correction = static_cast<int16_t>(bank_correction_peak - abs((bank - bank_sector_midpoint) / 2));
   int const bank_sine{std::clamp(math::sine_q15(weighted),-maximum_bank_sine,maximum_bank_sine)};
   if(state.bank_correction) rotate_heading(state,static_cast<float>(-state.bank_correction * context.elapsed / bank_correction_divisor));
   state.turn_response = static_cast<float>(static_cast<calculation>(context.mach) * mach_response * response_fraction);

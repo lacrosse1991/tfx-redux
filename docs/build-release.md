@@ -8,10 +8,13 @@ MSYS2 UCRT64 GCC on Windows. The compiler cache is separate for each platform
 and configuration.
 
 All three packages target x86-64. TFX's faithful flight calculations use x87
-extended precision and instructions; a native Apple Silicon build cannot yet
-run that backend. The macOS package is built on Intel, for macOS 15 or newer.
-The Linux package is built on Ubuntu 24.04. No game installation, firmware,
-private research exports or screenshot gallery is needed for these CI tests.
+extended precision and instructions on those hosts. A SoftFloat-backed
+80-bit calculation path is under way for Apple Silicon and other hosts without
+an x87 `long double`; production x86-64 packages keep the hardware backend.
+Force it on an x87 host with `-DTFX_FORCE_SOFT_X87=ON` for comparison builds.
+The macOS package is built on Intel, for macOS 15 or newer. The Linux package
+is built on Ubuntu 24.04. No game installation, firmware, private research
+exports or screenshot gallery is needed for these CI tests.
 
 ## When a release is published
 

@@ -29,3 +29,8 @@ Creative ASP/CSP QSound reconstruction is source-included from the pinned
 copyright 2026 Lost Engines contributors. Its source and acknowledgements
 remain in the fetched dependency. Original Creative firmware programs are
 external research inputs and are not distributed in source or binary packages.
+
+Berkeley SoftFloat Release 3e (John R. Hauser / The Regents of the University of
+California) supplies the portable 80-bit extended-precision arithmetic used when
+the host has no x87 long double. Its BSD-style licence is retained with the
+fetched sources and Runtime package notices.

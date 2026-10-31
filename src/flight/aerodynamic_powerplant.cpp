@@ -1,13 +1,15 @@
 #include "aerodynamic_powerplant.h"
 #include <cmath>
 #include <limits>
+#include "math/calculation.h"
 #include "math/floating_environment.h"
 #include "math/x87.h"
 
 namespace tfx::flight {
 namespace {
+using std::isfinite;
 
-using calculation = long double;
+using calculation = math::calculation;
 double constexpr idle_throttle{.6}, throttle_span{2.5}, half{.5};
 double constexpr gravity{9.81}, minimum_flow{.5}, fuel_use_scale{.7};
 double constexpr fuel_display_scale{9999}, engine_decay{-.0001}, engine_drop{-.1};
@@ -15,7 +17,7 @@ unsigned int constexpr warp_multiplier{5}, engine_drop_threshold{64000};
 uint8_t constexpr afterburner_off{3};
 
 int32_t truncate(calculation const value) {
-  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+  if(!isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 

@@ -4,9 +4,11 @@
 #include <cmath>
 #include <stdexcept>
 #include <utility>
+#include "math/calculation.h"
 
 namespace tfx::math {
 namespace {
+using std::sqrt;
 
 int32_t wrap(int64_t const value) {
   return std::bit_cast<int32_t>(static_cast<uint32_t>(value));
@@ -30,7 +32,7 @@ vec3<int32_t> unit_cross(vec3<int32_t> const &first, vec3<int32_t> const &second
 
 uint32_t integer_sqrt(uint32_t const value) {
   /// Return the native integer square-root result without relying on libm rounding at square boundaries
-  auto root{static_cast<uint32_t>(std::sqrt(static_cast<double>(value)))};
+  auto root{static_cast<uint32_t>(sqrt(static_cast<double>(value)))};
   while(static_cast<uint64_t>(root) * root > value) --root;
   while(static_cast<uint64_t>(root + 1) * (root + 1) <= value) ++root;
   return root;
@@ -62,12 +64,12 @@ void attitude::normalise() {
 bool attitude::align_down(vec3f const &direction) {
   // Native 0x8e86c and 0x91c48 build a down axis, then right/down cross
   // products. Their float stores differ from the integer normalise() path.
-  using calculation = long double;
+  using calculation = math::calculation;
   float constexpr normalised_word{3.0518509447574615e-05f}, word_scale{32767};
   double constexpr minimum_length{.001};
   auto const length{[](vec3f const &vector) {
     calculation const x{vector.x}, y{vector.y}, z{vector.z};
-    return std::sqrt(x * x + y * y + z * z);
+    return sqrt(x * x + y * y + z * z);
   }};
   auto const normalised{[](int32_t const value) { return static_cast<calculation>(signed_word(static_cast<uint16_t>(value))) * normalised_word; }};
   auto const words{[&](vec3f const &vector, float const magnitude) {

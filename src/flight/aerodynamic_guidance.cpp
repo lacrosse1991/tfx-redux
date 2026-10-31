@@ -1,13 +1,15 @@
 #include "aerodynamic_guidance.h"
 #include <cmath>
 #include <numbers>
+#include "math/calculation.h"
 #include "math/floating_environment.h"
 #include "math/x87.h"
 
 namespace tfx::flight {
 namespace {
+using std::sqrt;
 
-using calculation = long double;
+using calculation = math::calculation;
 double constexpr native_pi{3.14159}, inverse_angle_half_turn{3.0517578125e-05}, inverse_degrees{.005555555555555555};
 double constexpr gravity{9.81}, climb_error_scale{.001}, minimum_target_down{-19812}, maximum_target_down{-304.8};
 double constexpr vertical_deadband{.5}, bank_margin{.95}, heading_bank_scale{2}, followed_bank_scale{3};
@@ -28,10 +30,10 @@ double constexpr positive_roll_step{native_pi * maximum_roll_step_degrees * inve
 double constexpr negative_roll_step{native_pi * -maximum_roll_step_degrees * inverse_degrees};
 
 calculation wide(double const value) { return value; }
-calculation native_asin(calculation const x) { return math::x87::atan2(x,std::sqrt(1.0L - x * x)); }
+calculation native_asin(calculation const x) { return math::x87::atan2(x,sqrt(1.0L - x * x)); }
 calculation native_acos(calculation const x) {
   // Native 0xd254e subtracts asin from the actual extended half-pi constant.
-  return std::numbers::pi_v<calculation> / 2 - native_asin(x);
+  return calculation{std::numbers::pi_v<long double>} / 2 - native_asin(x);
 }
 void wrap_radians(double &value) {
   if(value > native_pi) value = static_cast<double>(wide(value) - wide(native_pi) * 2);
@@ -72,7 +74,7 @@ aerodynamic_guidance_events update_aerodynamic_guidance(aerodynamic_guidance &st
   state.saved_roll_rate = motion.angular_rate.x;
   int32_t const phase{-static_cast<int32_t>(math::signed_word(static_cast<uint16_t>(targets.heading - static_cast<uint16_t>(data.track_heading))))};
   state.heading_error = static_cast<double>(wide(native_pi) * phase * inverse_angle_half_turn);
-  state.ground_speed = static_cast<double>(std::sqrt(wide(motion.velocity_ned.y) * motion.velocity_ned.y + wide(motion.velocity_ned.x) * motion.velocity_ned.x + wide(motion.velocity_ned.z) * motion.velocity_ned.z));
+  state.ground_speed = static_cast<double>(sqrt(wide(motion.velocity_ned.y) * motion.velocity_ned.y + wide(motion.velocity_ned.x) * motion.velocity_ned.x + wide(motion.velocity_ned.z) * motion.velocity_ned.z));
   state.climb_speed_limit = static_cast<double>((wide(context.engine.dry_thrust) + context.engine.afterburner_thrust - context.previous_drag) * state.ground_speed / (wide(data.mass_kg) * gravity));
   wrap_radians(state.heading_error);
   if(targets.down_metres > maximum_target_down) targets.down_metres = maximum_target_down;
