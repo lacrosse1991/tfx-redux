@@ -41,8 +41,9 @@ extern "C" {
 #include "softfloat-specialize.h"
 
 // Post pi/6 reduction |x| can reach ~0.286 (not the |x|<1/4 the series
-// comment assumes). Twenty Taylor terms keep the residual far below one
-// extended ULP on the guidance asin oracle set.
+// comment assumes). Twenty Taylor terms keep truncation far below one
+// extended ULP; remaining asin oracle gaps are final FPATAN rounding vs
+// Intel with identical inputs (asin_sqrt matches).
 #define FPATAN_ARR_SIZE 20
 
 static const extFloat80_t floatx80_one = packFloatx80(0, 0x3fff, uint64_t(0x8000000000000000));
