@@ -77,7 +77,7 @@ direction_keys update_simple_controls(simple_control_state &state, simple_contro
     state.angular_rate.y = keys.left ? static_cast<float>(-rate) : keys.right ? rate : 0;
     roll = static_cast<float>(static_cast<calculation>(roll) * .5f);
   }
-  auto const inverse_pi{1.0L / native_pi};
+  auto const inverse_pi{calculation{1} / native_pi};
   state.angular_rate.x = static_cast<float>(static_cast<calculation>(pitch) * seconds_per_tick * angles_per_radian * inverse_pi);
   state.angular_rate.z = static_cast<float>(static_cast<calculation>(roll) * seconds_per_tick * angles_per_radian * inverse_pi);
   return keys;

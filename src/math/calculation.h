@@ -18,6 +18,9 @@ using calculation = float80;
 using calculation = long double;
 #endif
 
+// Prefer calculation{1} / x over 1.0L / x. The latter divides in host long
+// double before converting, which bypasses SoftFloat on non-x87 builds.
+
 inline constexpr bool calculation_is_x87_precision =
   std::numeric_limits<calculation>::digits == 64;
 

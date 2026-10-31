@@ -47,7 +47,7 @@ aerodynamic_force_result update_aerodynamic_forces(aerodynamic_motion &state, ae
     unsigned int axis{0};
     for(auto const *direction : {&basis.forward,&basis.right,&basis.down}) state.ground_velocity_body[axis++] = static_cast<double>(0.0L * direction->y + 0.0L * direction->x);
   }
-  calculation const inverse_mass{1.0L / inertia.mass_kg};
+  calculation const inverse_mass{calculation{1} / inertia.mass_kg};
   for(unsigned int axis{0}; axis != 3; ++axis) state.acceleration_ned[axis] = static_cast<double>(static_cast<calculation>(result.ned_force[axis]) * inverse_mass);
   state.angular_acceleration.x = static_cast<double>(static_cast<calculation>(result.body_moment.x) / (static_cast<calculation>(inertia.fuel_kg) * inertia.fuel_kg * fuel_roll_inertia + inertia.roll_moment));
   state.angular_acceleration.y = static_cast<double>(static_cast<calculation>(result.body_moment.y) / inertia.pitch_moment);

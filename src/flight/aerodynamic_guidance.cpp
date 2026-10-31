@@ -175,24 +175,24 @@ void apply_aerodynamic_guidance(aerodynamic_guidance const &state, aerodynamic_m
     calculation const vector{(wide(powerplant.thrust) * manual.thrust_vector_fraction) * math::x87::sin(maximum_vector_angle)};
     calculation const roll_thrust{vector * context.engine.roll_thrust_arm * 2};
     calculation const dynamic{wide(data.atmosphere.density) * data.metres_per_second * data.metres_per_second * p.wing_area};
-    calculation const inverse_speed{1.0L / (wide(data.metres_per_second) * 2)};
+    calculation const inverse_speed{calculation{1} / (wide(data.metres_per_second) * 2)};
     calculation const roll_control{wide(c.aileron_effectiveness) * p.maximum_aileron_angle + roll_thrust / (dynamic * p.wing_span)};
     controls.aileron = static_cast<double>((-wide(state.commanded_roll_rate) * c.roll_damping * p.wing_span * inverse_speed) / roll_control);
     double const pitch_thrust{static_cast<double>(vector * context.engine.pitch_thrust_arm * 2)};
     double const pitch_dynamic{static_cast<double>(dynamic * p.mean_chord)};
-    double const inverse_dynamic{static_cast<double>(1.0L / pitch_dynamic)};
+    double const inverse_dynamic{static_cast<double>(calculation{1} / pitch_dynamic)};
     double const pitch_contribution{static_cast<double>(wide(pitch_thrust) * inverse_dynamic)};
     calculation const elevator_control{wide(c.elevator_moment) * p.maximum_elevator_angle};
     double const stored_elevator_control{static_cast<double>(elevator_control)};
     double const denominator{static_cast<double>(elevator_control + pitch_contribution)};
-    double const inverse_denominator{static_cast<double>(1.0L / denominator)};
+    double const inverse_denominator{static_cast<double>(calculation{1} / denominator)};
     controls.elevator = static_cast<double>(-(wide(manual.pitch_rate_bias) * c.pitch_damping * p.mean_chord * inverse_speed) * inverse_denominator);
     controls.rudder = static_cast<double>(wide(state.yaw_demand) / context.rudder_effectiveness);
     controls.keyboard_elevator = controls.elevator;
     controls.keyboard_aileron = controls.aileron;
     controls.keyboard_rudder = controls.rudder;
     if(law.aircraft == player_aircraft::raptor) manual.elevator_trim = static_cast<double>(-(wide(data.angle_of_attack) * c.pitch_stability + p.zero_pitch_moment) * inverse_denominator);
-    else manual.elevator_trim = static_cast<double>((wide(data.angle_of_attack) * c.pitch_stability + p.zero_pitch_moment) * (-1.0L / stored_elevator_control));
+    else manual.elevator_trim = static_cast<double>((wide(data.angle_of_attack) * c.pitch_stability + p.zero_pitch_moment) * (-calculation{1} / stored_elevator_control));
   }
   manual.pitch_rate_bias = 0;
 }

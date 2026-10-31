@@ -73,7 +73,7 @@ bool attitude::align_down(vec3f const &direction) {
   }};
   auto const normalised{[](int32_t const value) { return static_cast<calculation>(signed_word(static_cast<uint16_t>(value))) * normalised_word; }};
   auto const words{[&](vec3f const &vector, float const magnitude) {
-    calculation const inverse{1.0L / magnitude};
+    calculation const inverse{calculation{1} / magnitude};
     auto const component{[&](float const value) { return static_cast<int32_t>(signed_word(static_cast<uint16_t>(static_cast<int32_t>(static_cast<calculation>(value) * inverse * word_scale)))); }};
     return vec3<int32_t>{component(vector.x),component(vector.y),component(vector.z)};
   }};
