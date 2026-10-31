@@ -101,7 +101,7 @@ bool update_aerodynamic_contact(aerodynamic_contact_state &state, aerodynamic_mo
 
   double const forward_length{static_cast<double>(sqrt(static_cast<calculation>(static_cast<double>(wide(basis.forward.y) * basis.forward.y + wide(basis.forward.x) * basis.forward.x))))};
   if(forward_length > minimum_forward_projection) {
-    calculation const inverse_length{1.0L / forward_length};
+    calculation const inverse_length{calculation{1} / forward_length};
     calculation const sideways_force{(wide(basis.forward.x) * state.velocity_ned.y + -wide(basis.forward.y) * state.velocity_ned.x) * inverse_length * lateral_friction * normal};
     state.working_force.y = static_cast<double>((-wide(basis.forward.y) * basis.right.x + wide(basis.forward.x) * basis.right.y) * sideways_force * inverse_length);
     state.working_force.z = static_cast<double>((-wide(basis.forward.y) * basis.down.x + wide(basis.forward.x) * basis.down.y) * sideways_force * inverse_length);
@@ -142,7 +142,7 @@ bool update_aerodynamic_contact(aerodynamic_contact_state &state, aerodynamic_mo
   }
   if(context.kind == aerodynamic_contact_kind::body) state.resistance_force = static_cast<double>(wide(normal) * body_friction);
   if(wide(state.velocity_body.x) * state.resistance_force > 0) state.resistance_force = negative(state.resistance_force);
-  calculation const inverse_right_length{1.0L / right_length};
+  calculation const inverse_right_length{calculation{1} / right_length};
   state.working_force.x = static_cast<double>((wide(basis.forward.x) * basis.right.y - wide(basis.forward.y) * basis.right.x) * state.resistance_force * inverse_right_length);
   state.working_force.z = static_cast<double>((wide(basis.down.x) * basis.right.y - wide(basis.down.y) * basis.right.x) * state.resistance_force * inverse_right_length);
   state.force.x = static_cast<double>(wide(state.working_force.x) + state.force.x);

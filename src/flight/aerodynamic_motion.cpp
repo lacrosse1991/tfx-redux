@@ -28,7 +28,7 @@ math::angle rotation_amount(double const amount, double *const remainder) {
   return result;
 }
 void rotate(aerodynamic_motion &state, calculation const roll, calculation const pitch, calculation const yaw) {
-  double const inverse_pi{static_cast<double>(1.0L / native_pi)};
+  double const inverse_pi{static_cast<double>(calculation{1} / native_pi)};
   rotate_aerodynamic_units(state,aerodynamic_rotation::roll,static_cast<double>(roll * angle_units_per_half_turn * inverse_pi));
   rotate_aerodynamic_units(state,aerodynamic_rotation::pitch,static_cast<double>(pitch * angle_units_per_half_turn * inverse_pi));
   rotate_aerodynamic_units(state,aerodynamic_rotation::yaw,static_cast<double>(yaw * angle_units_per_half_turn * inverse_pi));

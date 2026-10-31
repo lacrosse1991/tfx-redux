@@ -35,7 +35,7 @@ void update_aerodynamic_commands(aerodynamic_commands &state, aerodynamic_manual
   calculation const pitch_control{pitch_thrust / (dynamic_area * geometry.mean_chord) + wide(coefficients.elevator_moment) * geometry.maximum_elevator_angle};
   // The simplified law explicitly constructs zero pitch rate. Keep the
   // original arithmetic, including its sign, damping term and store boundary.
-  calculation const zero_damping{0.0L / (wide(data.mass_kg) * data.metres_per_second) * coefficients.pitch_damping * geometry.mean_chord};
+  calculation const zero_damping{calculation{0} / (wide(data.mass_kg) * data.metres_per_second) * coefficients.pitch_damping * geometry.mean_chord};
   state.angle_of_attack = static_cast<double>(-(pitch_control * manual.controls.elevator + geometry.zero_pitch_moment + zero_damping / (wide(data.metres_per_second) * pitch_rate_divisor)) / coefficients.pitch_stability);
   if(context.stick_pressure) state.angle_of_attack = static_cast<double>(wide(context.seconds) * manual.pitch_rate_bias + state.angle_of_attack);
   calculation const roll_thrust{wide(powerplant.thrust) * manual.thrust_vector_fraction * vector_sine * context.engine_roll_arm * vector_moment_multiplier};
