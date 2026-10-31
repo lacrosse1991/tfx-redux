@@ -38,7 +38,9 @@ calculation native_acos(calculation const x) {
   // atan2(sqrt(1-x^2), x) matches the recorded extended angle.
   return math::x87::atan2(sqrt(1.0L - x * x), x);
 #else
-  return math::calculation_pi() / 2 - native_asin(x);
+  // Keep the pi constant inline on hardware x87; wrapping it in
+  // calculation_pi() changes Debug evaluation enough to miss fixtures.
+  return calculation{std::numbers::pi_v<long double>} / 2 - native_asin(x);
 #endif
 }
 void wrap_radians(double &value) {
