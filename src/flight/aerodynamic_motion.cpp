@@ -2,12 +2,13 @@
 #include <bit>
 #include <cmath>
 #include "math/floating_environment.h"
+#include "math/calculation.h"
 #include <limits>
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = math::calculation;
 double constexpr half_step{.5}, native_pi{3.141592654};
 double constexpr angle_units_per_half_turn{32768}, inverse_rotation_step{1.0 / 64};
 unsigned int constexpr rotation_step{64}, time_warp_multiplier{5};
@@ -15,7 +16,7 @@ double constexpr impact_down_metres{2};
 int32_t constexpr fallback_height_limit{-2}, fallback_world_y{-5};
 
 int32_t truncate(calculation const value) {
-  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+  if(!math::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= math::calculation{2147483648.0}) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 math::angle rotation_amount(double const amount, double *const remainder) {

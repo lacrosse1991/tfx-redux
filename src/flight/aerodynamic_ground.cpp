@@ -2,11 +2,12 @@
 #include <cmath>
 #include <utility>
 #include "math/floating_environment.h"
+#include "math/calculation.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = math::calculation;
 double constexpr gear_failure_multiplier{1.2}, metres_per_foot{.3048};
 double constexpr contact_search_margin{-5}, launch_throttle{.6}, launch_force{700000};
 double constexpr maximum_cable_length{600}, stopping_cable_length{200};
@@ -49,14 +50,14 @@ void update_aerodynamic_arrestor(aerodynamic_ground_state &state, aerodynamic_mo
       for(unsigned int axis{0}; axis != 3; ++axis) state.hook_displacement[axis] = static_cast<double>(wide(motion.pose.metres_ned[axis]) + state.hook_offset_ned[axis] - state.hook_anchor_ned[axis]);
       auto const &displacement{state.hook_displacement};
       double const squared{static_cast<double>(wide(displacement.x) * displacement.x + wide(displacement.y) * displacement.y + wide(displacement.z) * displacement.z)};
-      state.cable_length = static_cast<double>(std::sqrt(wide(squared)));
+      state.cable_length = static_cast<double>(math::sqrt(wide(squared)));
       calculation const inverse_length{1.0L / state.cable_length};
       for(unsigned int axis{0}; axis != 3; ++axis) {
         calculation const damping{wide(displacement[axis]) * inverse_length * motion.velocity_ned[axis] * parameters.arrestor_damping};
         state.hook_force_ned[axis] = static_cast<double>(-(damping + wide(parameters.arrestor_stiffness) * displacement[axis]));
       }
       auto const &velocity{motion.velocity_ned};
-      state.cable_speed = static_cast<double>(std::sqrt(wide(velocity.x) * velocity.x + wide(velocity.y) * velocity.y + wide(velocity.z) * velocity.z));
+      state.cable_speed = static_cast<double>(math::sqrt(wide(velocity.x) * velocity.x + wide(velocity.y) * velocity.y + wide(velocity.z) * velocity.z));
       if(state.cable_length > stopping_cable_length || (state.cable_speed < maximum_stopping_speed && state.cable_speed > minimum_stopping_speed)) {
         calculation const inverse_seconds{1.0L / context.seconds};
         for(unsigned int axis{0}; axis != 3; ++axis) {

@@ -1,47 +1,49 @@
 #pragma once
 
-#include <cmath>
+#include "math/backend.h"
+#include "math/calculation.h"
 
 namespace tfx::math::x87 {
 
-// The current native numerical backend already requires a 64-bit-significand
-// long double. Keep the actual x87 transcendental rounding on x86 hosts.
-inline long double atan2(long double const y, long double const x) {
-#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__)
+// Hardware path keeps real x87 transcendental rounding. Soft path uses the
+// in-tree extended implementation under a 64-bit significand result format.
+inline calculation atan2(calculation const y, calculation const x) {
+#if defined(TFX_MATH_HARDWARE_X87)
   long double result;
-  __asm__("fpatan" : "=t"(result) : "0"(x), "u"(y) : "st(1)");
+  __asm__("fpatan" : "=t"(result) : "0"(static_cast<long double>(x)), "u"(static_cast<long double>(y)) : "st(1)");
   return result;
 #else
-  return std::atan2(y,x);
+  return soft_atan2(y, x);
 #endif
 }
 
-inline long double sin(long double const value) {
-#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__)
+inline calculation sin(calculation const value) {
+#if defined(TFX_MATH_HARDWARE_X87)
   long double result;
-  __asm__("fsin" : "=t"(result) : "0"(value));
+  __asm__("fsin" : "=t"(result) : "0"(static_cast<long double>(value)));
   return result;
 #else
-  return std::sin(value);
-#endif
-}
-inline long double cos(long double const value) {
-#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__)
-  long double result;
-  __asm__("fcos" : "=t"(result) : "0"(value));
-  return result;
-#else
-  return std::cos(value);
+  return soft_sin(value);
 #endif
 }
 
-inline long double tan(long double const value) {
-#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__)
+inline calculation cos(calculation const value) {
+#if defined(TFX_MATH_HARDWARE_X87)
   long double result;
-  __asm__("fptan; fstp %%st(0)" : "=t"(result) : "0"(value));
+  __asm__("fcos" : "=t"(result) : "0"(static_cast<long double>(value)));
   return result;
 #else
-  return std::tan(value);
+  return soft_cos(value);
+#endif
+}
+
+inline calculation tan(calculation const value) {
+#if defined(TFX_MATH_HARDWARE_X87)
+  long double result;
+  __asm__("fptan; fstp %%st(0)" : "=t"(result) : "0"(static_cast<long double>(value)));
+  return result;
+#else
+  return soft_tan(value);
 #endif
 }
 

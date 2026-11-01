@@ -2,18 +2,19 @@
 #include <cmath>
 #include "math/floating_environment.h"
 #include "math/x87.h"
+#include "math/calculation.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = math::calculation;
 double constexpr gravity{9.81}, fuel_roll_inertia{.004166666666666667};
 double constexpr refuelling_level_moment{10000};
 
 calculation native_asin(double const value) {
   // Detected 387 path: original 0xd242c then 0xd24a7's direct FPATAN.
   calculation const x{value};
-  return math::x87::atan2(x,std::sqrt(1.0L - x * x));
+  return math::x87::atan2(x,math::sqrt(1.0L - x * x));
 }
 
 } // anonymous namespace

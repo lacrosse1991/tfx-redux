@@ -1,6 +1,7 @@
 #pragma once
 
-#include <limits>
+#include "math/backend.h"
+#include "math/soft_control.h"
 #include <stdexcept>
 
 namespace tfx::math {
@@ -10,23 +11,29 @@ namespace tfx::math {
 // x87 transcendental results still retain their instruction's extended format.
 class floating_environment {
 private:
+#if defined(TFX_MATH_HARDWARE_X87)
   unsigned short previous{0};
   bool changed{false};
+#endif
 
 public:
   floating_environment() {
-#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__)
-    unsigned short constexpr native_control{0x127f};
+#if defined(TFX_MATH_HARDWARE_X87)
+    unsigned short constexpr native_control{native_fpu_control};
     __asm__ volatile("fnstcw %0" : "=m"(previous));
     changed = previous != native_control;
     if(changed) __asm__ volatile("fldcw %0" : : "m"(native_control) : "memory");
+#elif defined(TFX_MATH_SOFT_X87)
+    soft_x87_detail::push_native_control();
 #else
     throw std::runtime_error{"native numerical flight currently requires an x87 arithmetic backend"};
 #endif
   }
   ~floating_environment() {
-#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__)
+#if defined(TFX_MATH_HARDWARE_X87)
     if(changed) __asm__ volatile("fldcw %0" : : "m"(previous) : "memory");
+#elif defined(TFX_MATH_SOFT_X87)
+    soft_x87_detail::pop_control();
 #endif
   }
   floating_environment(floating_environment const &) = delete;

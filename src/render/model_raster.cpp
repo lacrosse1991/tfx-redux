@@ -1,3 +1,4 @@
+#include "math/calculation.h"
 #include "model_raster.h"
 #include "model_projection.h"
 #include "near_clip.h"
@@ -95,7 +96,7 @@ bool paint_model_primitive(framebuffer &output, models::primitive const &source,
     return true;
   }
   double const radius_word{std::nearbyint(source.radius * 2 / vertices.front().projection_scale)};
-  if(!std::isfinite(radius_word) || radius_word < 0 || radius_word > std::numeric_limits<uint16_t>::max()) return false;
+  if(!math::isfinite(radius_word) || radius_word < 0 || radius_word > std::numeric_limits<uint16_t>::max()) return false;
   // Radius uses signed WORD * 128 / high-depth in both apertures. Only the
   // centre projection changes for the wider missile-nose view.
   int const radius{math::signed_word(static_cast<uint16_t>(radius_word)) * 128 / depth};

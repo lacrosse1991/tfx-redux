@@ -2,11 +2,12 @@
 #include <cmath>
 #include "math/floating_environment.h"
 #include "math/x87.h"
+#include "math/calculation.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = math::calculation;
 double constexpr native_pi{3.14159}, inverse_degrees{.005555555555555555};
 double constexpr gravity{9.81}, nozzle_degrees{20};
 double constexpr trim_minimum_speed{20}, flap_minimum_speed{10}, limit_minimum_speed{1};
@@ -20,7 +21,7 @@ double constexpr stall_trim_scale{.02}, degrees_per_radian{180.0 / native_pi};
 double constexpr nozzle_angle{native_pi * nozzle_degrees * inverse_degrees};
 uint16_t constexpr external_control_mode{3};
 
-calculation asin(calculation const value) { return math::x87::atan2(value,std::sqrt(1.0L - value * value)); }
+calculation asin(calculation const value) { return math::x87::atan2(value,math::sqrt(1.0L - value * value)); }
 calculation velocity_area(aerodynamic_airdata const &data, double const area) {
   calculation const speed{data.metres_per_second};
   return static_cast<calculation>(data.atmosphere.density) * speed * speed * area;
@@ -131,7 +132,7 @@ afterburner_change finish_aerodynamic_controls(aerodynamic_manual_state &state, 
     if(margin < 0) {
       double const roll_damping{static_cast<double>(static_cast<calculation>(c.roll_damping) * p.wing_span / (speed * 2))};
       double const squared{static_cast<double>(static_cast<calculation>(margin) / context.cockpit_upward_metres * gravity)};
-      controls.aileron_limit = static_cast<double>(std::sqrt(static_cast<calculation>(squared)) * roll_limit_scale * roll_damping / (static_cast<calculation>(c.aileron_effectiveness) * p.maximum_aileron_angle));
+      controls.aileron_limit = static_cast<double>(math::sqrt(static_cast<calculation>(squared)) * roll_limit_scale * roll_damping / (static_cast<calculation>(c.aileron_effectiveness) * p.maximum_aileron_angle));
     }
     if(controls.aileron_limit > 1) controls.aileron_limit = 1;
     if(context.accumulated_damage != 0) {

@@ -14,6 +14,16 @@ if(TFX_STATIC_RUNTIME)
     add_link_options("$<$<LINK_LANG_AND_ID:CXX,GNU>:-static-libgcc;-static-libstdc++>")
   endif()
 endif()
+# Faithful flight math: hardware x87 on capable hosts, soft extended elsewhere.
+set(TFX_NUMERICAL_BACKEND "auto" CACHE STRING "Flight numerical backend: auto, hardware, or soft")
+set_property(CACHE TFX_NUMERICAL_BACKEND PROPERTY STRINGS auto hardware soft)
+if(TFX_NUMERICAL_BACKEND STREQUAL "hardware")
+  add_compile_definitions(TFX_NUMERICAL_BACKEND_HARDWARE=1)
+elseif(TFX_NUMERICAL_BACKEND STREQUAL "soft")
+  add_compile_definitions(TFX_NUMERICAL_BACKEND_SOFT=1)
+elseif(NOT TFX_NUMERICAL_BACKEND STREQUAL "auto")
+  message(FATAL_ERROR "TFX_NUMERICAL_BACKEND must be auto, hardware, or soft")
+endif()
 
 include(CTest)
 include(cmake/dependencies.cmake)
@@ -410,6 +420,11 @@ add_library(tfx_core
   src/render/software_renderer.h
   src/math/native.cpp
   src/math/native.h
+  src/math/extended.cpp
+  src/math/extended.h
+  src/math/backend.h
+  src/math/soft_control.h
+  src/math/calculation.h
   src/models/shape.cpp
   src/models/shape.h
   src/world/instance.cpp
@@ -536,9 +551,24 @@ if(BUILD_TESTING)
     target_link_options(native_x87_backend PRIVATE -fno-sanitize=all)
   endif()
   add_executable(floating_environment_tests tests/floating_environment_test.cpp)
+  target_link_libraries(floating_environment_tests PRIVATE tfx_core)
   configure_first_party(floating_environment_tests)
   add_test(NAME math.native_fpu_precision_and_restoration COMMAND floating_environment_tests)
   set_tests_properties(math.native_fpu_precision_and_restoration PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(soft_x87_tests tests/soft_x87_test.cpp)
+  target_link_libraries(soft_x87_tests PRIVATE tfx_core)
+  configure_first_party(soft_x87_tests)
+  add_test(NAME math.soft_x87_arithmetic_and_transcendentals COMMAND soft_x87_tests)
+  add_executable(soft_x87_golden_tests tests/soft_x87_golden_test.cpp)
+  target_link_libraries(soft_x87_golden_tests PRIVATE tfx_core)
+  configure_first_party(soft_x87_golden_tests)
+  add_test(NAME math.soft_x87_transcendental_goldens COMMAND soft_x87_golden_tests
+    "${PROJECT_SOURCE_DIR}/tests/reference/soft_x87_goldens.txt")
+  set_tests_properties(math.soft_x87_transcendental_goldens PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(compare_numerical_backends tools/compare_numerical_backends.cpp)
+  target_link_libraries(compare_numerical_backends PRIVATE tfx_core)
+  configure_first_party(compare_numerical_backends)
+  add_test(NAME math.numerical_backend_smoke COMMAND compare_numerical_backends)
 
   add_executable(hud_font_probe tests/hud_font_probe.cpp)
   target_link_libraries(hud_font_probe PRIVATE tfx_core)

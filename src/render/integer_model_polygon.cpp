@@ -1,3 +1,4 @@
+#include "math/calculation.h"
 #include "integer_model_polygon.h"
 #include "integer_polygon.h"
 #include "near_clip.h"
@@ -85,7 +86,7 @@ bool integer_model_polygon(framebuffer &output, std::span<models::model_vertex c
     std::vector<uint16_t> shades;shades.reserve(vertices.size());
     for(auto const &vertex : vertices) {
       double const shade{vertex.shade * 256};
-      if(!std::isfinite(shade) || shade < 0 || shade > std::numeric_limits<uint16_t>::max()) return false;
+      if(!math::isfinite(shade) || shade < 0 || shade > std::numeric_limits<uint16_t>::max()) return false;
       shades.push_back(static_cast<uint16_t>(shade));
     }
     std::vector<indexed_vertex> projected;projected.reserve(vertices.size() + 2);
